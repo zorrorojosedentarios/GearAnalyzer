@@ -1,0 +1,1 @@
+-- Archivo desactivado. La lógica se ha movido a GearAnalyzer_Diagnostic.lua

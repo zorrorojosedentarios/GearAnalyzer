@@ -1,0 +1,9 @@
+# World of Warcraft Addon GitIgnore
+*.bak
+*.old
+*.tmp
+.DS_Store
+Thumbs.db
+
+# Ace3/Lib folders (Usually kept in repo for portability, uncomment if you prefer to ignore)
+# Libs/
