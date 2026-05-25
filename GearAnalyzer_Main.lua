@@ -18,8 +18,6 @@ GA_BiSLists = {
     ["WARLOCK"] = {}
 }
 GA_BiSPhases = { "PR", "T9", "T10", "RS" }
-GearAnalyzer.BiSLists = GA_BiSLists
-GearAnalyzer.BiSPhases = GA_BiSPhases
 
 local defaults = {
     char = {
