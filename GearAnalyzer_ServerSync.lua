@@ -113,7 +113,11 @@ function GearAnalyzer:RunUnifiedScan(startID, endID, profFilter)
     local results = global.ServerDatabase.enchantMappings
     
     local currentID = startID or 1
+    if self._scanUpdateFrame then
+        self._scanUpdateFrame:SetScript("OnUpdate", nil)
+    end
     local f = CreateFrame("Frame")
+    self._scanUpdateFrame = f
     self:ShowScannerWindow()
     self:LogScan("|cff00ff00Escaneando IDs del " .. currentID .. " al " .. actualEndID .. "...|r")
     self:LogScan("-- Espera a que termine para una fluidez total --")

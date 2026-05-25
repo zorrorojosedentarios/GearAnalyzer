@@ -96,26 +96,26 @@ function GearAnalyzer:ScanEquipment()
                                 if lineText then
                                     local lt = lineText:lower()
                                     -- Ingeniería
-                                    if lt:find("aceleradores") then d.enchant = "3604"; break
-                                    elseif lt:find("nitro") then d.enchant = "3855"; break
-                                    elseif lt:find("tela flexible") or lt:find("paraca") then d.enchant = "3830"; break
+                                    if lt:find("aceleradores") or lt:find("nitro boosts") then d.enchant = "3604"; break
+                                    elseif lt:find("nitro") and lt:find("boots") then d.enchant = "3855"; break
+                                    elseif lt:find("tela flexible") or lt:find("paraca") or lt:find("flexweave") then d.enchant = "3830"; break
                                     -- Sastrería
-                                    elseif lt:find("tejido de luz") then d.enchant = "3722"; break
-                                    elseif lt:find("resplandor oscuro") then d.enchant = "3728"; break
-                                    elseif lt:find("guardia de espada") then d.enchant = "3730"; break
+                                    elseif lt:find("tejido de luz") or lt:find("lightweave") then d.enchant = "3722"; break
+                                    elseif lt:find("resplandor oscuro") or lt:find("darkglow") then d.enchant = "3728"; break
+                                    elseif lt:find("guardia de espada") or lt:find("swordguard") then d.enchant = "3730"; break
                                     -- Peletería
-                                    elseif lt:find("forro de pelaje") then 
-                                        if lt:find("ataque") then d.enchant = "3850"
-                                        elseif lt:find("hechizos") then d.enchant = "3851"
-                                        elseif lt:find("aguante") then d.enchant = "3757"
+                                    elseif lt:find("forro de pelaje") or lt:find("fur lining") then 
+                                        if lt:find("ataque") or lt:find("attack") then d.enchant = "3850"
+                                        elseif lt:find("hechizos") or lt:find("spell") then d.enchant = "3851"
+                                        elseif lt:find("aguante") or lt:find("stamina") then d.enchant = "3757"
                                         end
                                         break
                                     -- Inscripción (Maestro)
-                                    elseif lt:find("inscripci") and lt:find("maestro") then
-                                        if lt:find("hacha") then d.enchant = "3835"
-                                        elseif lt:find("tormenta") then d.enchant = "3836"
-                                        elseif lt:find("pin") then d.enchant = "3837"
-                                        elseif lt:find("risco") then d.enchant = "3838"
+                                    elseif (lt:find("inscripci") and lt:find("maestro")) or lt:find("master") then
+                                        if lt:find("hacha") or lt:find("axe") then d.enchant = "3835"
+                                        elseif lt:find("tormenta") or lt:find("storm") then d.enchant = "3836"
+                                        elseif lt:find("pin") or lt:find("pinnacle") then d.enchant = "3837"
+                                        elseif lt:find("risco") or lt:find("crag") then d.enchant = "3838"
                                         end
                                         break
                                     end
@@ -185,7 +185,16 @@ function GearAnalyzer:GetItemData(link)
             if sName and cur and max then data.setName = sName; data.setCount = tonumber(cur); data.setMax = tonumber(max); data.hasSetInfo = true end
         end
     end
-    if itemKey and tooltip:NumLines() >= 2 then self.itemDataCache[itemKey] = data end
+    if itemKey and tooltip:NumLines() >= 2 then
+        self.itemDataCache[itemKey] = data
+        if self._cacheCounts then
+            self._cacheCounts.item = self._cacheCounts.item + 1
+            if self._cacheCounts.item > 500 then
+                wipe(self.itemDataCache)
+                self._cacheCounts.item = 0
+            end
+        end
+    end
     return data
 end
 

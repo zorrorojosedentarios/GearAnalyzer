@@ -126,6 +126,13 @@ function GearAnalyzer:FullReload()
     if self.evaluationCache then wipe(self.evaluationCache) end
     if self.itemDataCache then wipe(self.itemDataCache) end
     if self.socketColorsCache then wipe(self.socketColorsCache) end
+    if self.scoreCache then wipe(self.scoreCache) end
+    if self.bisTooltipCache then wipe(self.bisTooltipCache) end
+    if self._cacheCounts then
+        self._cacheCounts.item = 0
+        self._cacheCounts.bis = 0
+        self._cacheCounts.eval = 0
+    end
     
     self.cachedProfessions = nil
     self.temp_currentSpec = nil 

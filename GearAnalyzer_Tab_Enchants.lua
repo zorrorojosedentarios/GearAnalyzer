@@ -84,10 +84,20 @@ function Tab:Update(page, ignoreForced)
     -- El escaneo ya se hizo en AnalyzeEquipment
 
 
+    -- Construir mapa de scan por slotKey una sola vez
+    local scanBySlot = {}
+    if GearAnalyzer.scannedEquipment then
+        for _, d in ipairs(GearAnalyzer.scannedEquipment) do
+            local key = GearAnalyzer:GetSlotKey(d.slotName, d.slotID)
+            if key then scanBySlot[key] = d end
+        end
+    end
+
     local y = -5
     local i = 1
     for _, slotInfo in ipairs(SLOT_LIST) do
         local rawEnchantID = specEnchants[slotInfo.id]
+        local scanData = scanBySlot[slotInfo.id]
         
         -- Si es una categoría extra (Runas/Inscripcion), buscamos el primer valor escaneado para esa profesión para mostrar algo
         if slotInfo.isExtra then
@@ -134,13 +144,8 @@ function Tab:Update(page, ignoreForced)
 
             -- Detección de lo que el jugador tiene puesto actualmente
             local currentID = 0
-            if GearAnalyzer.scannedEquipment then
-                for _, d in ipairs(GearAnalyzer.scannedEquipment) do
-                    if GearAnalyzer:GetSlotKey(d.slotName, d.slotID) == slotInfo.id then
-                        currentID = tonumber(d.enchant) or 0
-                        break
-                    end
-                end
+            if scanData then
+                currentID = tonumber(scanData.enchant) or 0
             end
 
             -- MODO DEVELOPER: Aplicar Overrides
@@ -227,21 +232,17 @@ function Tab:Update(page, ignoreForced)
             end
 
             local statusKey = (ignoreForced and "" or "guide_") .. "enchStatus"
-            for _, d in ipairs(GearAnalyzer.scannedEquipment or {}) do
-                local dataSlotKey = GearAnalyzer:GetSlotKey(d.slotName, d.slotID)
-                if dataSlotKey == slotInfo.id then
-                    local status = d[statusKey]
-                    if status == 2 then
-                        statusIcon = "Interface\\Buttons\\UI-CheckBox-Check"
-                        statusColor = {0, 1, 0}
-                    elseif status == 3 then
-                        statusIcon = "Interface\\Buttons\\UI-CheckBox-Check"
-                        statusColor = {1, 0.65, 0} -- Naranja (Profesión)
-                    elseif status == 1 then
-                        statusIcon = "Interface\\RAIDFRAME\\ReadyCheck-Waiting"
-                        statusColor = {1, 1, 0}
-                    end
-                    break
+            if scanData then
+                local status = scanData[statusKey]
+                if status == 2 then
+                    statusIcon = "Interface\\Buttons\\UI-CheckBox-Check"
+                    statusColor = {0, 1, 0}
+                elseif status == 3 then
+                    statusIcon = "Interface\\Buttons\\UI-CheckBox-Check"
+                    statusColor = {1, 0.65, 0} -- Naranja (Profesión)
+                elseif status == 1 then
+                    statusIcon = "Interface\\RAIDFRAME\\ReadyCheck-Waiting"
+                    statusColor = {1, 1, 0}
                 end
             end
 
@@ -302,6 +303,68 @@ function Tab:Update(page, ignoreForced)
                 edIcon:SetScript("OnLeave", function() GameTooltip:Hide() end)
                 edSpell:SetScript("OnEnter", function(s) GameTooltip:SetOwner(s, "ANCHOR_TOP"); GameTooltip:SetText("|cffffd100ID Spell (DORADO)|r\nID para Tooltips y Links."); GameTooltip:Show() end)
                 edSpell:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+                -- Handlers de edición (set ONCE, leen datos de row)
+                edID:SetScript("OnEnterPressed", function(s)
+                    local r = s:GetParent()
+                    local val = tonumber(s:GetText())
+                    if val and r._overrideKey then
+                        GearAnalyzer.db.global.customOverrides.enchants[r._overrideKey] = val
+                        GearAnalyzer:FullReload()
+                    end
+                    s:ClearFocus()
+                end)
+                edIcon:SetScript("OnEnterPressed", function(s)
+                    local r = s:GetParent()
+                    local val = tonumber(s:GetText())
+                    if val and r._overrideKey then
+                        GearAnalyzer.db.global.customOverrides.enchants[r._overrideKey .. "_icon"] = val
+                        GearAnalyzer:FullReload()
+                    end
+                    s:ClearFocus()
+                end)
+                edSpell:SetScript("OnEnterPressed", function(s)
+                    local r = s:GetParent()
+                    local val = tonumber(s:GetText())
+                    if val and r._overrideKey then
+                        GearAnalyzer.db.global.customOverrides.enchants[r._overrideKey .. "_spell"] = val
+                        GearAnalyzer:FullReload()
+                    end
+                    s:ClearFocus()
+                end)
+
+                edID:SetScript("OnEscapePressed", function(s)
+                    local r = s:GetParent()
+                    s:SetText(tostring(r._devCurrCheckID or 0))
+                    s:ClearFocus()
+                end)
+                edIcon:SetScript("OnEscapePressed", function(s)
+                    local r = s:GetParent()
+                    s:SetText(tostring(r._devCurrIconID or 0))
+                    s:ClearFocus()
+                end)
+                edSpell:SetScript("OnEscapePressed", function(s)
+                    local r = s:GetParent()
+                    s:SetText(tostring(r._devCurrSpellID or 0))
+                    s:ClearFocus()
+                end)
+
+                reset:SetScript("OnClick", function(s)
+                    local r = s:GetParent()
+                    if r._overrideKey then
+                        local overrides = GearAnalyzer.db.global.customOverrides.enchants
+                        overrides[r._overrideKey] = nil
+                        overrides[r._overrideKey .. "_icon"] = nil
+                        overrides[r._overrideKey .. "_spell"] = nil
+                        GearAnalyzer:FullReload()
+                    end
+                end)
+
+                row:SetScript("OnHide", function(s)
+                    if s.devEditID then s.devEditID:ClearFocus() end
+                    if s.devEditIcon then s.devEditIcon:ClearFocus() end
+                    if s.devEditSpell then s.devEditSpell:ClearFocus() end
+                end)
             end
 
             -- LIMPIAR POSICIONES PARA EVITAR SOLAPS
@@ -310,6 +373,14 @@ function Tab:Update(page, ignoreForced)
             local isDev = GearAnalyzer.charDB and GearAnalyzer.charDB.settings and GearAnalyzer.charDB.settings.devMode
             
             if isDev then
+                -- Store per-row data for pre-set scripts
+                local overrideKey = (normSpec or "NONE") .. "_" .. slotInfo.id
+                local overrides = GearAnalyzer.db.global.customOverrides.enchants
+                row._overrideKey = overrideKey
+                row._devCurrCheckID = overrides[overrideKey] or enchant.id or 0
+                row._devCurrIconID  = overrides[overrideKey .. "_icon"] or enchant.itemID or 0
+                row._devCurrSpellID = overrides[overrideKey .. "_spell"] or enchant.spellID or 0
+
                 -- Modo Dev: Icono a la derecha de los editbox, mostrar IDs técnicos
                 row.icon:SetPoint("LEFT", 145, 0) 
                 
@@ -335,40 +406,10 @@ function Tab:Update(page, ignoreForced)
                 
                 -- Permitir interacción en toda la fila en modo normal, pero proteger EditBoxes en modo Dev
                 row:SetHitRectInsets(145, 0, 0, 0)
-                
-                -- Lógica de edición (esto ya estaba pero lo agrupamos aquí)
-                local overrideKey = (normSpec or "NONE") .. "_" .. slotInfo.id
-                local overrides = GearAnalyzer.db.global.customOverrides.enchants
-                local currentCheckID = overrides[overrideKey] or enchant.id or 0
-                local currentIconID  = overrides[overrideKey .. "_icon"] or enchant.itemID or 0
-                local currentSpellID = overrides[overrideKey .. "_spell"] or enchant.spellID or 0
-                
-                if not row.devEditID:HasFocus() then row.devEditID:SetText(tostring(currentCheckID)) end
-                if not row.devEditIcon:HasFocus() then row.devEditIcon:SetText(tostring(currentIconID)) end
-                if not row.devEditSpell:HasFocus() then row.devEditSpell:SetText(tostring(currentSpellID)) end
-                
-                row.devEditID:SetScript("OnEnterPressed", function(s) local val = tonumber(s:GetText()); if val then GearAnalyzer.db.global.customOverrides.enchants[overrideKey] = val; GearAnalyzer:FullReload() end; s:ClearFocus() end)
-                row.devEditIcon:SetScript("OnEnterPressed", function(s) local val = tonumber(s:GetText()); if val then GearAnalyzer.db.global.customOverrides.enchants[overrideKey .. "_icon"] = val; GearAnalyzer:FullReload() end; s:ClearFocus() end)
-                row.devEditSpell:SetScript("OnEnterPressed", function(s) local val = tonumber(s:GetText()); if val then GearAnalyzer.db.global.customOverrides.enchants[overrideKey .. "_spell"] = val; GearAnalyzer:FullReload() end; s:ClearFocus() end)
-                
-                row.devEditID:SetScript("OnEscapePressed", function(s) s:SetText(tostring(currentCheckID)); s:ClearFocus() end)
-                row.devEditIcon:SetScript("OnEscapePressed", function(s) s:SetText(tostring(currentIconID)); s:ClearFocus() end)
-                row.devEditSpell:SetScript("OnEscapePressed", function(s) s:SetText(tostring(currentSpellID)); s:ClearFocus() end)
 
-                row.devReset:SetScript("OnClick", function()
-                    local overrides = GearAnalyzer.db.global.customOverrides.enchants
-                    overrides[overrideKey] = nil
-                    overrides[overrideKey .. "_icon"] = nil
-                    overrides[overrideKey .. "_spell"] = nil
-                    GearAnalyzer:FullReload()
-                end)
-
-                -- Asegurar que al ocultar la fila se pierda el foco
-                row:SetScript("OnHide", function()
-                    if row.devEditID then row.devEditID:ClearFocus() end
-                    if row.devEditIcon then row.devEditIcon:ClearFocus() end
-                    if row.devEditSpell then row.devEditSpell:ClearFocus() end
-                end)
+                if not row.devEditID:HasFocus() then row.devEditID:SetText(tostring(row._devCurrCheckID)) end
+                if not row.devEditIcon:HasFocus() then row.devEditIcon:SetText(tostring(row._devCurrIconID)) end
+                if not row.devEditSpell:HasFocus() then row.devEditSpell:SetText(tostring(row._devCurrSpellID)) end
             else
                 -- Modo Normal: Icono a la izquierda, ocultar IDs técnicos
                 row.icon:SetPoint("LEFT", 10, 0)

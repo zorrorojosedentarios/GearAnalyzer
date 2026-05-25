@@ -195,27 +195,39 @@ function Tab:Update(page, ignoreForced)
                     reset:SetText("R")
                     row.devReset = reset
                     reset:SetFrameLevel(45)
-                end
-                
-                if not row.devEdit:HasFocus() then
-                    row.devEdit:SetText(tostring(target or "0"))
-                end
-                
-                row.devEdit:SetScript("OnEnterPressed", function(self)
-                    local val = tonumber(self:GetText())
-                    if val then GearAnalyzer.db.global.customOverrides.caps[overrideKey] = val; GearAnalyzer:FullReload() end
-                    self:ClearFocus()
-                end)
-                row.devEdit:SetScript("OnEscapePressed", function(self)
-                    self:SetText(tostring(target or "0"))
-                    self:ClearFocus()
-                end)
-                row.devReset:SetScript("OnClick", function() GearAnalyzer.db.global.customOverrides.caps[overrideKey] = nil; GearAnalyzer:FullReload() end)
-                
-                row:SetScript("OnHide", function()
-                    if row.devEdit then row.devEdit:ClearFocus() end
-                end)
 
+                    edit:SetScript("OnEnterPressed", function(s)
+                        local r = s:GetParent()
+                        local val = tonumber(s:GetText())
+                        if val and r._overrideKey then
+                            GearAnalyzer.db.global.customOverrides.caps[r._overrideKey] = val
+                            GearAnalyzer:FullReload()
+                        end
+                        s:ClearFocus()
+                    end)
+                    edit:SetScript("OnEscapePressed", function(s)
+                        local r = s:GetParent()
+                        s:SetText(tostring(r._devCurrTarget or 0))
+                        s:ClearFocus()
+                    end)
+                    reset:SetScript("OnClick", function(s)
+                        local r = s:GetParent()
+                        if r._overrideKey then
+                            GearAnalyzer.db.global.customOverrides.caps[r._overrideKey] = nil
+                            GearAnalyzer:FullReload()
+                        end
+                    end)
+                    row:SetScript("OnHide", function(s)
+                        if s.devEdit then s.devEdit:ClearFocus() end
+                    end)
+                end
+                
+                row._overrideKey = overrideKey
+                row._devCurrTarget = (customTarget and customTarget ~= 0) and customTarget or target or 0
+                if not row.devEdit:HasFocus() then
+                    row.devEdit:SetText(tostring(row._devCurrTarget or 0))
+                end
+                
                 row.devEdit:Show(); row.devReset:Show()
             elseif row.devEdit then row.devEdit:Hide(); row.devReset:Hide() end
 
@@ -287,26 +299,39 @@ function Tab:Update(page, ignoreForced)
                     reset:SetText("R")
                     row.devReset = reset
                     reset:SetFrameLevel(45)
+
+                    edit:SetScript("OnEnterPressed", function(s)
+                        local r = s:GetParent()
+                        local val = tonumber(s:GetText())
+                        if val and r._overrideKey then
+                            GearAnalyzer.db.global.customOverrides.caps[r._overrideKey] = val
+                            GearAnalyzer:FullReload()
+                        end
+                        s:ClearFocus()
+                    end)
+                    edit:SetScript("OnEscapePressed", function(s)
+                        local r = s:GetParent()
+                        s:SetText(tostring(r._devCurrTarget or 0))
+                        s:ClearFocus()
+                    end)
+                    reset:SetScript("OnClick", function(s)
+                        local r = s:GetParent()
+                        if r._overrideKey then
+                            GearAnalyzer.db.global.customOverrides.caps[r._overrideKey] = nil
+                            GearAnalyzer:FullReload()
+                        end
+                    end)
+                    row:SetScript("OnHide", function(s)
+                        if s.devEdit then s.devEdit:ClearFocus() end
+                    end)
                 end
                 
+                local effectiveTarget = customTarget or targetSkill
+                row._overrideKey = overrideKey
+                row._devCurrTarget = effectiveTarget or 0
                 if not row.devEdit:HasFocus() then
-                    row.devEdit:SetText(tostring(targetSkill or "0"))
+                    row.devEdit:SetText(tostring(row._devCurrTarget))
                 end
-                
-                row.devEdit:SetScript("OnEnterPressed", function(self)
-                    local val = tonumber(self:GetText())
-                    if val then GearAnalyzer.db.global.customOverrides.caps[overrideKey] = val; GearAnalyzer:FullReload() end
-                    self:ClearFocus()
-                end)
-                row.devEdit:SetScript("OnEscapePressed", function(self)
-                    self:SetText(tostring(targetSkill or "0"))
-                    self:ClearFocus()
-                end)
-                row.devReset:SetScript("OnClick", function() GearAnalyzer.db.global.customOverrides.caps[overrideKey] = nil; GearAnalyzer:FullReload() end)
-                
-                row:SetScript("OnHide", function()
-                    if row.devEdit then row.devEdit:ClearFocus() end
-                end)
 
                 row.devEdit:Show(); row.devReset:Show()
             elseif row.devEdit then row.devEdit:Hide(); row.devReset:Hide() end
@@ -384,24 +409,30 @@ function Tab:Update(page, ignoreForced)
                             reset:SetPoint("RIGHT", edit, "LEFT", -5, 0)
                             reset:SetText("R")
                             row.devReset = reset
+
+                            edit:SetScript("OnEnterPressed", function(s)
+                                local r = s:GetParent()
+                                local val = tonumber(s:GetText())
+                                if val and r._overrideKey then
+                                    GearAnalyzer.db.global.customOverrides.caps[r._overrideKey] = val
+                                    GearAnalyzer:FullReload()
+                                end
+                                s:ClearFocus()
+                            end)
+                            reset:SetScript("OnClick", function(s)
+                                local r = s:GetParent()
+                                if r._overrideKey then
+                                    GearAnalyzer.db.global.customOverrides.caps[r._overrideKey] = nil
+                                    GearAnalyzer:FullReload()
+                                end
+                            end)
                         end
 
+                        row._overrideKey = overrideKey
+                        row._devCurrTarget = (customTarget or target)
                         if not row.devEdit:HasFocus() then
-                            row.devEdit:SetText(tostring(target))
+                            row.devEdit:SetText(tostring(row._devCurrTarget))
                         end
-                        row.devEdit:SetScript("OnEnterPressed", function(self)
-                            local val = tonumber(self:GetText())
-                            if val then
-                                GearAnalyzer.db.global.customOverrides.caps[overrideKey] = val
-                                GearAnalyzer:FullReload()
-                            end
-                            self:ClearFocus()
-                        end)
-                        
-                        row.devReset:SetScript("OnClick", function()
-                            GearAnalyzer.db.global.customOverrides.caps[overrideKey] = nil
-                            GearAnalyzer:FullReload()
-                        end)
 
                         row.devEdit:Show()
                         row.devReset:Show()

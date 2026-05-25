@@ -426,7 +426,7 @@ function GearAnalyzer:AnalyzeEquipment(ignoreForced)
     self:ScanEquipment()
     
     -- [CORRECCIÓN CACHÉ] Limpiar el caché de evaluación para evitar que objetos queden como "Sin Datos"
-    if self.evaluationCache then wipe(self.evaluationCache) end
+    if self.evaluationCache then wipe(self.evaluationCache); if self._cacheCounts then self._cacheCounts.eval = 0 end end
     
     local db = self.charDB
 
@@ -701,6 +701,17 @@ function GearAnalyzer:AnalyzeEquipment(ignoreForced)
             end
         end
     end
+
+    -- [PRE-CACHE] Precargar scores del equipo equipado para el tooltip hook
+    if ignoreForced and class and currentSpec then
+        self.scoreCache[class] = self.scoreCache[class] or {}
+        self.scoreCache[class][currentSpec] = self.scoreCache[class][currentSpec] or {}
+        for _, d in ipairs(self.scannedEquipment) do
+            if d.itemLink and not self.scoreCache[class][currentSpec][d.itemLink] then
+                self.scoreCache[class][currentSpec][d.itemLink] = self:CalculateItemScore(d.itemLink, class, currentSpec)
+            end
+        end
+    end
 end
 
 
@@ -853,6 +864,13 @@ end
 function GearAnalyzer:EvaluateItem(link)
     if not link then return "NONE", 0 end
     if self.evaluationCache[link] then local c = self.evaluationCache[link]; return c.category, c.iLevel end
+    if self._cacheCounts then
+        self._cacheCounts.eval = self._cacheCounts.eval + 1
+        if self._cacheCounts.eval > 1000 then
+            wipe(self.evaluationCache)
+            self._cacheCounts.eval = 0
+        end
+    end
     local data = self:GetItemData(link)
     if not data then return "NONE", 0 end
     if data.quality < 2 then self.evaluationCache[link] = { category = "NEUTRAL", iLevel = data.iLevel }; return "NEUTRAL", data.iLevel end

@@ -6,9 +6,7 @@ local L = LibStub("AceLocale-3.0"):GetLocale("GearAnalyzer")
 local Tab = GearAnalyzer:NewModule("TabExportarIA")
 
 function Tab:Update(page, ignoreForced)
-    self.ignoreForced = ignoreForced  -- Guardar contexto de ventana
-    GearAnalyzer:ScanEquipment()
-    GearAnalyzer:AnalyzeEquipment(ignoreForced)
+    self.ignoreForced = ignoreForced
 
     if not page then return end
 
@@ -35,13 +33,12 @@ function Tab:Update(page, ignoreForced)
         local editBox = CreateFrame("EditBox", nil, scrollFrame)
         editBox:SetMultiLine(true)
         editBox:SetFontObject("ChatFontNormal")
-        editBox:SetWidth(page:GetWidth() - 60) -- Usar el ancho de la página directamente con un margen
+        editBox:SetWidth(page:GetWidth() - 60)
         editBox:SetAutoFocus(false)
-        editBox:SetMaxLetters(0) -- Sin limite
+        editBox:SetMaxLetters(0)
         editBox:SetTextInsets(5, 5, 5, 5)
         editBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
         
-        -- Evitar que bloquee las teclas cuando se oculta el tab
         f:SetScript("OnHide", function()
             if self.editBox then self.editBox:ClearFocus() end
         end)
@@ -60,6 +57,19 @@ function Tab:Update(page, ignoreForced)
         bg:SetBackdropColor(0, 0, 0, 0.5)
         bg:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
 
+        local generateBtn = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+        generateBtn:SetSize(120, 25)
+        generateBtn:SetPoint("BOTTOMLEFT", 30, 5)
+        generateBtn:SetText(L["GENERATE"] or "Generar")
+        generateBtn:SetScript("OnClick", function()
+            GearAnalyzer:ScanEquipment()
+            GearAnalyzer:AnalyzeEquipment(self.ignoreForced)
+            local text = self:GenerateExportText(self.ignoreForced)
+            editBox:SetText(text)
+            editBox:SetFocus()
+            editBox:HighlightText()
+        end)
+
         local copyBtn = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
         copyBtn:SetSize(120, 25)
         copyBtn:SetPoint("BOTTOM", 0, 5)
@@ -72,43 +82,32 @@ function Tab:Update(page, ignoreForced)
         end)
 
         self.editBox = editBox
+        self.generateBtn = generateBtn
     end
     
-    -- Asegurar que el ancho es correcto por si cambió el tamaño de la ventana
     self.editBox:SetWidth(self.container:GetWidth() - 60)
-    
-    local text = self:GenerateExportText(self.ignoreForced)
-    local oldText = self.editBox:GetText()
-    
-    if oldText ~= text then
-        self.editBox:SetText(text)
-        -- Solo resetear scroll si el texto cambió radicalmente (opcional)
-        -- GAExportScroll:SetVerticalScroll(0)
-    end
 end
 
 function Tab:GenerateExportText(ignoreForced)
     local iF = ignoreForced
-    local name = UnitName("player")
-    local classTag = GearAnalyzer:GetClassToken(iF)
-    local rawSpec = GearAnalyzer:GetCurrentSpecEnhanced(iF) or "Ninguna"
-    local currentSpec = GearAnalyzer:LocalizeText(rawSpec)
+    local t = {}
+    local nt = function(s) t[#t+1] = s end
     
-    local text = L["AI_INTRO_PROMPT"] .. "\n\n"
-    text = text .. "=== " .. L["PROFILE_LABEL"] .. ": " .. name .. " (" .. (GearAnalyzer:GetLocalizedClassName(iF) or "UNKNOWN") .. ") ===\n"
-    text = text .. L["SPEC_LABEL"] .. ": " .. currentSpec .. "\n\n"
+    nt(L["AI_INTRO_PROMPT"] .. "\n\n")
+    nt("=== " .. L["PROFILE_LABEL"] .. ": " .. UnitName("player") .. " (" .. (GearAnalyzer:GetLocalizedClassName(iF) or "UNKNOWN") .. ") ===\n")
+    nt(L["SPEC_LABEL"] .. ": " .. GearAnalyzer:LocalizeText(GearAnalyzer:GetCurrentSpecEnhanced(iF) or "Ninguna") .. "\n\n")
 
     -- 1. TALENTOS
     local n1, _, p1 = GetTalentTabInfo(1)
     local n2, _, p2 = GetTalentTabInfo(2)
     local n3, _, p3 = GetTalentTabInfo(3)
-    text = text .. "[" .. L["TALENT_DISTRIBUTION"] .. "]\n"
-    text = text .. "├─ " .. (GearAnalyzer:LocalizeText(n1) or (L["BRANCH"] .. " 1")) .. ": " .. (p1 or 0) .. "\n"
-    text = text .. "├─ " .. (GearAnalyzer:LocalizeText(n2) or (L["BRANCH"] .. " 2")) .. ": " .. (p2 or 0) .. "\n"
-    text = text .. "└─ " .. (GearAnalyzer:LocalizeText(n3) or (L["BRANCH"] .. " 3")) .. ": " .. (p3 or 0) .. "\n\n"
+    nt("[" .. L["TALENT_DISTRIBUTION"] .. "]\n")
+    nt("├─ " .. (GearAnalyzer:LocalizeText(n1) or (L["BRANCH"] .. " 1")) .. ": " .. (p1 or 0) .. "\n")
+    nt("├─ " .. (GearAnalyzer:LocalizeText(n2) or (L["BRANCH"] .. " 2")) .. ": " .. (p2 or 0) .. "\n")
+    nt("└─ " .. (GearAnalyzer:LocalizeText(n3) or (L["BRANCH"] .. " 3")) .. ": " .. (p3 or 0) .. "\n\n")
 
     -- 2. GLIFOS ACTIVOS
-    text = text .. "[" .. L["ACTIVE_GLYPHS"] .. "]\n"
+    nt("[" .. L["ACTIVE_GLYPHS"] .. "]\n")
     local hasGlyphs = false
     for i = 1, 6 do
         local enabled, glyphType, glyphSpellID = GetGlyphSocketInfo(i)
@@ -116,91 +115,78 @@ function Tab:GenerateExportText(ignoreForced)
             local gName = GetSpellInfo(glyphSpellID)
             if gName then
                 local typeStr = (glyphType == 1) and L["MAJOR"] or L["MINOR"]
-                text = text .. "├─ [" .. typeStr .. "] " .. gName .. "\n"
+                nt("├─ [" .. typeStr .. "] " .. gName .. "\n")
                 hasGlyphs = true
             end
         end
     end
-    if not hasGlyphs then text = text .. "└─ (" .. L["NO_GLYPHS"] .. ")\n" end
-    text = text .. "\n"
+    if not hasGlyphs then nt("└─ (" .. L["NO_GLYPHS"] .. ")\n") end
+    nt("\n")
 
     -- 3. ESTADISTICAS REALES
-    text = text .. "[" .. L["KEY_STATS"] .. "]\n"
-    text = text .. "├─ " .. L["MAX_HEALTH"] .. ": " .. UnitHealthMax("player") .. "\n"
-    text = text .. "├─ " .. L["ARMOR"] .. ": " .. select(2, UnitArmor("player")) .. "\n"
-    text = text .. "└─ " .. L["ATTACK_POWER"] .. ": " .. select(1, UnitAttackPower("player")) .. " (" .. L["RANGE"] .. ": " .. select(1, UnitRangedAttackPower("player")) .. ")\n\n"
+    nt("[" .. L["KEY_STATS"] .. "]\n")
+    nt("├─ " .. L["MAX_HEALTH"] .. ": " .. UnitHealthMax("player") .. "\n")
+    nt("├─ " .. L["ARMOR"] .. ": " .. select(2, UnitArmor("player")) .. "\n")
+    nt("└─ " .. L["ATTACK_POWER"] .. ": " .. select(1, UnitAttackPower("player")) .. " (" .. L["RANGE"] .. ": " .. select(1, UnitRangedAttackPower("player")) .. ")\n\n")
 
     -- 4. ESTADO DE OBJETIVOS (CAPS)
-    text = text .. "[" .. L["CAPS_STATUS_LOGS"] .. "]\n"
-    local dynamicGems = GearAnalyzer:GetDynamicGems(classTag, rawSpec)
+    nt("[" .. L["CAPS_STATUS_LOGS"] .. "]\n")
+    local dynamicGems = GearAnalyzer:GetDynamicGems(GearAnalyzer:GetClassToken(iF), GearAnalyzer:GetCurrentSpecEnhanced(iF))
     if dynamicGems and dynamicGems.capsStatus then
         for _, s in ipairs(dynamicGems.capsStatus) do
             local currentVal = GearAnalyzer:GetPlayerStat(s.stat)
             local targetVal = s.cap or 0
-            
-            -- Especial: Convertir targets si son ratings
             if (s.stat == "HIT" or s.stat == "HIT_SPELL") and targetVal > 50 then
                 targetVal = (s.stat == "HIT") and (targetVal / 32.79) or (targetVal / 26.23)
             elseif s.stat == "EXPERTISE" and targetVal > 100 then
                  targetVal = (targetVal / 8.2)
             end
-
-            -- Aplicar formato según el tipo de estadística
             local fmt = "%d / %d"
             if s.stat == "HIT" or s.stat == "HIT_SPELL" or s.stat == "EXPERTISE" or s.stat == "CRIT" then
                 fmt = "%.1f%% / %.1f%%"
             end
-            
             local statusLabel = s.met and "[OK]" or "[" .. L["PRIORITY_TAG"] .. "]"
-            local localizedLabel = GearAnalyzer:LocalizeText(s.label)
-            text = text .. "+- " .. localizedLabel .. ": " .. string.format(fmt, currentVal, 0):gsub(" / 0.0%%", ""):gsub(" / 0", "") .. " / CAP " .. string.format(fmt, 0, targetVal):gsub("0.0%% / ", ""):gsub("0 / ", "") .. " - " .. statusLabel .. "\n"
+            nt("+- " .. (GearAnalyzer:LocalizeText(s.label)) .. ": " .. string.format(fmt, currentVal, 0):gsub(" / 0.0%%", ""):gsub(" / 0", "") .. " / CAP " .. string.format(fmt, 0, targetVal):gsub("0.0%% / ", ""):gsub("0 / ", "") .. " - " .. statusLabel .. "\n")
         end
     end
-    text = text .. "\n"
+    nt("\n")
 
     -- 5. EQUIPAMIENTO DETALLADO
-    text = text .. "[" .. L["EQUIPMENT_DETAILS"] .. "]\n"
+    nt("[" .. L["EQUIPMENT_DETAILS"] .. "]\n")
+    local isEnchantable = {
+        ["Head"] = true, ["Shoulders"] = true, ["Cloak"] = true, ["Chest"] = true,
+        ["Bracers"] = true, ["Gloves"] = true, ["Waist"] = true, ["Legs"] = true,
+        ["Boots"] = true, ["Main Hand"] = true, ["Off Hand"] = true,
+        ["Two-Hand"] = true, ["One-Hand"] = true,
+        ["Cabeza"] = true, ["Hombros"] = true, ["Pecho"] = true,
+    }
     if GearAnalyzer.scannedEquipment then
         for _, d in ipairs(GearAnalyzer.scannedEquipment) do
             if d.itemLink then
                 local slotName = GearAnalyzer:LocalizeText(d.slotName or "Unknown")
-                local cleanItemLink = d.itemLink:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("|Hitem:.-|h", ""):gsub("|h", "")
-                text = text .. "+- " .. slotName .. ": " .. cleanItemLink .. "\n"
-                
-                -- Encantamiento
-                local isEnchantable = {
-                    ["Head"] = true, ["Shoulders"] = true, ["Cloak"] = true, ["Chest"] = true,
-                    ["Bracers"] = true, ["Gloves"] = true, ["Waist"] = true, ["Legs"] = true,
-                    ["Boots"] = true, ["Main Hand"] = true, ["Off Hand"] = true,
-                    ["Two-Hand"] = true, ["One-Hand"] = true
-                }
-                -- También probar en español por si el DB local aún no se actualizó
-                isEnchantable["Cabeza"] = true; isEnchantable["Hombros"] = true; isEnchantable["Pecho"] = true; 
-
+                local cleanLink = d.itemLink:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("|Hitem:.-|h", ""):gsub("|h", "")
+                nt("+- " .. slotName .. ": " .. cleanLink .. "\n")
                 if d.enchant and tonumber(d.enchant) > 0 then
                     local eData = GearAnalyzer:GetEnchantData(tonumber(d.enchant))
-                    local eName = GearAnalyzer:LocalizeText(eData and eData.name or "Unknown Enchant")
-                    text = text .. "  + " .. L["ENCHANT_LABEL"] .. ": " .. eName .. "\n"
+                    nt("  + " .. L["ENCHANT_LABEL"] .. ": " .. GearAnalyzer:LocalizeText(eData and eData.name or "Unknown Enchant") .. "\n")
                 elseif isEnchantable[slotName] or isEnchantable[d.slotName] then
-                    text = text .. "  + " .. L["ENCHANT_LABEL"] .. ": (" .. L["MISSING"] .. ") !!!\n"
+                    nt("  + " .. L["ENCHANT_LABEL"] .. ": (" .. L["MISSING"] .. ") !!!\n")
                 end
-
-                -- Gemas
                 if d.socketAnalysis and #d.socketAnalysis > 0 then
                     for i, socket in ipairs(d.socketAnalysis) do
                         local color = GearAnalyzer:LocalizeText(socket.color:upper())
-                        local rawGemName = (socket.currentGID and socket.currentGID > 0) and socket.currentName or ("(" .. L["EMPTY"] .. ")")
-                        local gemName = GearAnalyzer:LocalizeText(rawGemName):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("|Hitem:.-|h", ""):gsub("|h", "")
-                        text = text .. "  + " .. L["GEM_LABEL"] .. " " .. i .. " (" .. color .. "): " .. gemName .. "\n"
+                        local rawName = (socket.currentGID and socket.currentGID > 0) and socket.currentName or ("(" .. L["EMPTY"] .. ")")
+                        local gemName = GearAnalyzer:LocalizeText(rawName):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("|Hitem:.-|h", ""):gsub("|h", "")
+                        nt("  + " .. L["GEM_LABEL"] .. " " .. i .. " (" .. color .. "): " .. gemName .. "\n")
                     end
                 end
-                text = text .. "\n"
+                nt("\n")
             else
-                text = text .. "+- " .. GearAnalyzer:LocalizeText(d.slotName or "Unknown") .. ": (" .. L["EMPTY"] .. ")\n\n"
+                nt("+- " .. GearAnalyzer:LocalizeText(d.slotName or "Unknown") .. ": (" .. L["EMPTY"] .. ")\n\n")
             end
         end
     end
-    text = text .. "=== " .. L["PROFILE_FINISH"] .. " ===\n"
-    text = text .. L["GENERATED_BY"] .. " for NaerZone"
-    return text
+    nt("=== " .. L["PROFILE_FINISH"] .. " ===\n")
+    nt(L["GENERATED_BY"] .. " for NaerZone")
+    return table.concat(t)
 end

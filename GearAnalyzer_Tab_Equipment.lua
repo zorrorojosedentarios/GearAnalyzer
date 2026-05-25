@@ -63,6 +63,7 @@ function Tab:Update(page, ignoreForced)
     header.bg:Hide()
     header.icon:Hide()
     header.border:Hide()
+    header.data = nil
     
     if not header.hRecomendado then
         header.hRecomendado = header:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -109,6 +110,7 @@ function Tab:Update(page, ignoreForced)
         
         if not shouldSkip then
             local row = self:GetOrCreateRow(i, content)
+            row.data = d
             local w = content:GetWidth() or 700
             row:SetPoint("TOPLEFT", 0, y)
             row:SetSize(w, 42)
@@ -131,16 +133,6 @@ function Tab:Update(page, ignoreForced)
                 row.bg:SetTexture(1, 1, 1, 0.03)
                 row.border:SetVertexColor(r, g, b, 0.8)
             end
-
-            row.iconBtn:SetScript("OnEnter", function(self)
-                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetHyperlink(d.itemLink)
-                if d.setInfo then
-                    GameTooltip:AddLine(" ")
-                    GameTooltip:AddLine(d.setInfo)
-                end
-                GameTooltip:Show()
-            end)
 
             local rankTag = ""
             if d.rank then
@@ -169,46 +161,6 @@ function Tab:Update(page, ignoreForced)
                 row.gemBtn:Hide()
             end
             
-            row.gemBtn:SetScript("OnEnter", function(self)
-                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(L["GEM_ANALYSIS_TITLE"])
-                
-                if d.socketBonusText then
-                    local worth = GearAnalyzer:ShouldFollowSocket(GearAnalyzer:GetClassToken(), GearAnalyzer:GetCurrentSpecEnhanced(), d.socketSlotsAvailable, d.bonusStat, d.bonusVal)
-                    local worthCol = worth and ("|cff00ff00(" .. L["WORTH_IT"] .. ")|r") or ("|cffff0000(" .. L["IGNORE"] .. ")|r")
-                    GameTooltip:AddLine(L["BONUS"] .. ": " .. d.socketBonusText .. " " .. worthCol)
-                    GameTooltip:AddLine(" ")
-                end
-
-                if d.socketAnalysis and #d.socketAnalysis > 0 then
-                    for _, s in ipairs(d.socketAnalysis) do
-                        local sColor = "|cffaaaaaa"
-                        if s.color == "red" then sColor = "|cffff3333"
-                        elseif s.color == "yellow" then sColor = "|cffffff33"
-                        elseif s.color == "blue" then sColor = "|cff3333ff"
-                        elseif s.color == "meta" then sColor = "|cff00ffff"
-                        end
-                        
-                        local statusIcon = s.isMatch and "|cff00ff00[OK]|r" or "|cffff0000[X]|r"
-                        if s.isEmpty then statusIcon = "|cffffa500[V]|r" end
-
-                        GameTooltip:AddDoubleLine(sColor..s.color:upper().."|r: "..s.currentName, statusIcon, 1,1,1)
-                        if not s.isMatch then
-                            GameTooltip:AddLine("   " .. L["SUGGESTED"] .. ": |cff00ff00"..s.recommendedName.."|r")
-                        end
-                    end
-                else
-                    GameTooltip:AddLine(d.gemTooltip or L["NO_DATA"], 1, 1, 1)
-                end
-                
-                if d.slotName == "SLOT_CHEST" or d.slotName:find("Pecho") or d.slotName:find("Chest") then
-                    GameTooltip:AddLine(" ")
-                    GameTooltip:AddLine("|cff3fc7eb" .. L["NOTE"] .. ":|r |cffff00ff" .. L["NIGHTMARE_TEAR_RECOMMENDATION"] .. "|r", 1, 1, 1, true)
-                end
-                
-                GameTooltip:Show()
-            end)
-            
             -- Encantos
             local showEnch = (d.enchStatus ~= nil)
             if showEnch then
@@ -224,13 +176,6 @@ function Tab:Update(page, ignoreForced)
                 row.enchText:Hide()
                 row.enchBtn:Hide()
             end
-            
-            row.enchBtn:SetScript("OnEnter", function(self)
-                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(L["ENCHANT_STATUS_TITLE"])
-                GameTooltip:AddLine(d.enchTooltip or L["NO_DATA"], 1, 1, 1)
-                GameTooltip:Show()
-            end)
 
             -- Estado
             local estadoTexto = "|cffaaaaaa" .. L["NO_DATA"] .. "|r"
@@ -258,44 +203,11 @@ function Tab:Update(page, ignoreForced)
                 else 
                     row.bBtn:Disable() 
                 end
-                
-                row.bBtn:SetScript("OnClick", function()
-                    if d.betterInBags and d.betterItemBag and d.betterItemSlot then
-                        local invSlot = d.slotID
-                        if invSlot then
-                            ClearCursor()
-                            PickupContainerItem(d.betterItemBag, d.betterItemSlot)
-                            EquipCursorItem(invSlot)
-                            ClearCursor()
-                            print("|cff00ff00GearAnalyzer:|r " .. string.format(L["EQUIPPING_MSG"], d.betterItemLink, (L[d.slotName] or d.slotName)))
-                        else
-                            UseContainerItem(d.betterItemBag, d.betterItemSlot)
-                            print("|cff00ff00GearAnalyzer:|r " .. string.format(L["EQUIPPING_SIMPLE_MSG"], d.betterItemLink))
-                        end
-                        GearAnalyzer:After(0.4, function() GearAnalyzer:FullReload() end)
-                    end
-                end)
-
-                row.bBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
                 row.bBtn:Show()
                 -- Icono de la mejora recomendada
                 local _, _, _, _, _, _, _, _, _, betterTexture = GetItemInfo(d.betterItemLink)
                 row.betterIcon:SetTexture(betterTexture or GetItemIcon(d.betterItemLink))
                 row.betterIcon:Show()
-                
-                local locationText = d.betterInBags and ("|cff00ff00" .. L["IN_BAGS"] .. "|r") or ("|cffff0000" .. L["IN_BANK"] .. "|r")
-                row.betterIconBtn:SetScript("OnEnter", function(self)
-                    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                    GameTooltip:SetHyperlink(d.betterItemLink)
-                    GameTooltip:AddLine(" ")
-                    GameTooltip:AddLine(L["LOCATION"] .. ": " .. locationText)
-                    if d.betterInBank then
-                        GameTooltip:AddLine("|cffff0000" .. L["BANK_WARNING"] .. "|r", 1, 0, 0, true)
-                    else
-                        GameTooltip:AddLine("|cff00ff00" .. L["EQUIP_INSTRUCTIONS"] .. "|r")
-                    end
-                    GameTooltip:Show()
-                end)
                 row.betterIconBtn:Show()
                 if row.divider then row.divider:Show() end
             else
@@ -319,21 +231,14 @@ function Tab:Update(page, ignoreForced)
             row.enchText:SetText("")
             row.status:SetText("|cff888888" .. L["EMPTY"] .. "|r")
             row.bBtn:Hide()
-            row.iconBtn:SetScript("OnEnter", nil)
         end
 
         -- SIGUIENTE MEJOR (Para ambos modos)
         if d.nextUpgradeID then
             local _, itemLink, _, _, _, _, _, _, _, texture = GetItemInfo(d.nextUpgradeID)
+            row.nextUpgradeLink = itemLink
             row.nextIcon:SetTexture(texture or GetItemIcon(d.nextUpgradeID))
             row.nextIcon:Show()
-            row.nextBtn:SetScript("OnEnter", function(self)
-                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetHyperlink(itemLink or ("item:"..d.nextUpgradeID))
-                GameTooltip:AddLine(" ")
-                GameTooltip:AddLine("|cffffd100" .. L["NEXT_BIG_UPGRADE"] .. "|r")
-                GameTooltip:Show()
-            end)
             row.nextBtn:Show()
         else
             row.nextIcon:Hide()
@@ -382,7 +287,7 @@ function Tab:GetOrCreateRow(i, parent)
     row.bg = bg
 
     local icon = row:CreateTexture(nil, "ARTWORK")
-    icon:SetSize(38, 38) -- Tamaño aumentado (antes 34)
+    icon:SetSize(38, 38)
     icon:SetPoint("LEFT", 5, 0)
     row.icon = icon
 
@@ -403,6 +308,18 @@ function Tab:GetOrCreateRow(i, parent)
     iconBtn:SetSize(38, 38)
     iconBtn:SetPoint("CENTER", icon, "CENTER")
     iconBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    iconBtn:SetScript("OnEnter", function(self)
+        local r = self:GetParent()
+        local d = r.data
+        if not d or not d.itemLink then return end
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetHyperlink(d.itemLink)
+        if d.setInfo then
+            GameTooltip:AddLine(" ")
+            GameTooltip:AddLine(d.setInfo)
+        end
+        GameTooltip:Show()
+    end)
     row.iconBtn = iconBtn
 
     local nameText = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
@@ -421,6 +338,42 @@ function Tab:GetOrCreateRow(i, parent)
     local gemText = gemBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     gemText:SetAllPoints()
     gemBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    gemBtn:SetScript("OnEnter", function(self)
+        local r = self:GetParent()
+        local d = r.data
+        if not d then return end
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText(L["GEM_ANALYSIS_TITLE"])
+        if d.socketBonusText then
+            local worth = GearAnalyzer:ShouldFollowSocket(GearAnalyzer:GetClassToken(), GearAnalyzer:GetCurrentSpecEnhanced(), d.socketSlotsAvailable, d.bonusStat, d.bonusVal)
+            local worthCol = worth and ("|cff00ff00(" .. L["WORTH_IT"] .. ")|r") or ("|cffff0000(" .. L["IGNORE"] .. ")|r")
+            GameTooltip:AddLine(L["BONUS"] .. ": " .. d.socketBonusText .. " " .. worthCol)
+            GameTooltip:AddLine(" ")
+        end
+        if d.socketAnalysis and #d.socketAnalysis > 0 then
+            for _, s in ipairs(d.socketAnalysis) do
+                local sColor = "|cffaaaaaa"
+                if s.color == "red" then sColor = "|cffff3333"
+                elseif s.color == "yellow" then sColor = "|cffffff33"
+                elseif s.color == "blue" then sColor = "|cff3333ff"
+                elseif s.color == "meta" then sColor = "|cff00ffff"
+                end
+                local statusIcon = s.isMatch and "|cff00ff00[OK]|r" or "|cffff0000[X]|r"
+                if s.isEmpty then statusIcon = "|cffffa500[V]|r" end
+                GameTooltip:AddDoubleLine(sColor..s.color:upper().."|r: "..s.currentName, statusIcon, 1,1,1)
+                if not s.isMatch then
+                    GameTooltip:AddLine("   " .. L["SUGGESTED"] .. ": |cff00ff00"..s.recommendedName.."|r")
+                end
+            end
+        else
+            GameTooltip:AddLine(d.gemTooltip or L["NO_DATA"], 1, 1, 1)
+        end
+        if d.slotName == "SLOT_CHEST" or d.slotName:find("Pecho") or d.slotName:find("Chest") then
+            GameTooltip:AddLine(" ")
+            GameTooltip:AddLine("|cff3fc7eb" .. L["NOTE"] .. ":|r |cffff00ff" .. L["NIGHTMARE_TEAR_RECOMMENDATION"] .. "|r", 1, 1, 1, true)
+        end
+        GameTooltip:Show()
+    end)
     row.gemBtn = gemBtn
     row.gemText = gemText
 
@@ -430,6 +383,15 @@ function Tab:GetOrCreateRow(i, parent)
     local enchText = enchBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     enchText:SetAllPoints()
     enchBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    enchBtn:SetScript("OnEnter", function(self)
+        local r = self:GetParent()
+        local d = r.data
+        if not d then return end
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText(L["ENCHANT_STATUS_TITLE"])
+        GameTooltip:AddLine(d.enchTooltip or L["NO_DATA"], 1, 1, 1)
+        GameTooltip:Show()
+    end)
     row.enchBtn = enchBtn
     row.enchText = enchText
 
@@ -440,6 +402,16 @@ function Tab:GetOrCreateRow(i, parent)
     nextBtn:SetSize(32, 32)
     nextBtn:SetPoint("CENTER", nextIcon, "CENTER")
     nextBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    nextBtn:SetScript("OnEnter", function(self)
+        local r = self:GetParent()
+        local d = r.data
+        if not d then return end
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetHyperlink(r.nextUpgradeLink or ("item:"..d.nextUpgradeID))
+        GameTooltip:AddLine(" ")
+        GameTooltip:AddLine("|cffffd100" .. L["NEXT_BIG_UPGRADE"] .. "|r")
+        GameTooltip:Show()
+    end)
     row.nextIcon = nextIcon
     row.nextBtn = nextBtn
 
@@ -451,6 +423,41 @@ function Tab:GetOrCreateRow(i, parent)
     bBtn:SetSize(75, 22)
     bBtn:SetPoint("RIGHT", row, "RIGHT", -185, 0)
     bBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    bBtn:SetScript("OnEnter", function(self)
+        local r = self:GetParent()
+        local d = r.data
+        if not d then return end
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetHyperlink(d.betterItemLink)
+        local locationText = d.betterInBags and ("|cff00ff00" .. L["IN_BAGS"] .. "|r") or ("|cffff0000" .. L["IN_BANK"] .. "|r")
+        GameTooltip:AddLine(" ")
+        GameTooltip:AddLine(L["LOCATION"] .. ": " .. locationText)
+        if d.betterInBank then
+            GameTooltip:AddLine("|cffff0000" .. L["BANK_WARNING"] .. "|r", 1, 0, 0, true)
+        else
+            GameTooltip:AddLine("|cff00ff00" .. L["EQUIP_INSTRUCTIONS"] .. "|r")
+        end
+        GameTooltip:Show()
+    end)
+    bBtn:SetScript("OnClick", function(self)
+        local r = self:GetParent()
+        local d = r.data
+        if not d then return end
+        if d.betterInBags and d.betterItemBag and d.betterItemSlot then
+            local invSlot = d.slotID
+            if invSlot then
+                ClearCursor()
+                PickupContainerItem(d.betterItemBag, d.betterItemSlot)
+                EquipCursorItem(invSlot)
+                ClearCursor()
+                print("|cff00ff00GearAnalyzer:|r " .. string.format(L["EQUIPPING_MSG"], d.betterItemLink, (L[d.slotName] or d.slotName)))
+            else
+                UseContainerItem(d.betterItemBag, d.betterItemSlot)
+                print("|cff00ff00GearAnalyzer:|r " .. string.format(L["EQUIPPING_SIMPLE_MSG"], d.betterItemLink))
+            end
+            GearAnalyzer:After(0.4, function() GearAnalyzer:FullReload() end)
+        end
+    end)
     row.bBtn = bBtn
 
     local betterIcon = row:CreateTexture(nil, "ARTWORK")
@@ -462,6 +469,22 @@ function Tab:GetOrCreateRow(i, parent)
     betterIconBtn:SetSize(32, 32)
     betterIconBtn:SetPoint("CENTER", betterIcon, "CENTER")
     betterIconBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    betterIconBtn:SetScript("OnEnter", function(self)
+        local r = self:GetParent()
+        local d = r.data
+        if not d then return end
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetHyperlink(d.betterItemLink)
+        local locationText = d.betterInBags and ("|cff00ff00" .. L["IN_BAGS"] .. "|r") or ("|cffff0000" .. L["IN_BANK"] .. "|r")
+        GameTooltip:AddLine(" ")
+        GameTooltip:AddLine(L["LOCATION"] .. ": " .. locationText)
+        if d.betterInBank then
+            GameTooltip:AddLine("|cffff0000" .. L["BANK_WARNING"] .. "|r", 1, 0, 0, true)
+        else
+            GameTooltip:AddLine("|cff00ff00" .. L["EQUIP_INSTRUCTIONS"] .. "|r")
+        end
+        GameTooltip:Show()
+    end)
     row.betterIconBtn = betterIconBtn
 
     local divider = row:CreateTexture(nil, "OVERLAY")

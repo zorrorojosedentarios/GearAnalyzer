@@ -1,15 +1,25 @@
 -- =========================
 -- GearAnalyzer (Ace3 Core)
 -- =========================
-GearAnalyzer = LibStub("AceAddon-3.0"):NewAddon("GearAnalyzer", "AceEvent-3.0", "AceConsole-3.0", "AceTimer-3.0", "AceHook-3.0")
+GearAnalyzer = LibStub("AceAddon-3.0"):NewAddon("GearAnalyzer", "AceEvent-3.0", "AceConsole-3.0", "AceTimer-3.0",
+    "AceHook-3.0")
 GearAnalyzer.version = "v3.5"
 
 GA_BiSLists = {
-    ["DEATHKNIGHT"] = {}, ["DRUID"] = {}, ["HUNTER"] = {}, ["MAGE"] = {},
-    ["PALADIN"] = {}, ["PRIEST"] = {}, ["ROGUE"] = {}, ["SHAMAN"] = {},
-    ["WARRIOR"] = {}, ["WARLOCK"] = {}
+    ["DEATHKNIGHT"] = {},
+    ["DRUID"] = {},
+    ["HUNTER"] = {},
+    ["MAGE"] = {},
+    ["PALADIN"] = {},
+    ["PRIEST"] = {},
+    ["ROGUE"] = {},
+    ["SHAMAN"] = {},
+    ["WARRIOR"] = {},
+    ["WARLOCK"] = {}
 }
 GA_BiSPhases = { "PR", "T9", "T10", "RS" }
+GearAnalyzer.BiSLists = GA_BiSLists
+GearAnalyzer.BiSPhases = GA_BiSPhases
 
 local defaults = {
     char = {
@@ -82,15 +92,15 @@ function GearAnalyzer:GetItemInfoFallback(id)
     if not id then return nil end
     local name = GetItemInfo(id)
     if name then return name end
-    
+
     if not self.ScannerTooltip then
         self.ScannerTooltip = CreateFrame("GameTooltip", "GAScannerTooltip", UIParent, "GameTooltipTemplate")
         self.ScannerTooltip:SetOwner(UIParent, "ANCHOR_NONE")
     end
-    
+
     self.ScannerTooltip:ClearLines()
     self.ScannerTooltip:SetHyperlink("item:" .. id .. ":0:0:0:0:0:0:0")
-    
+
     local fontString = _G["GAScannerTooltipTextLeft1"]
     if fontString then
         local text = fontString:GetText()
@@ -98,15 +108,15 @@ function GearAnalyzer:GetItemInfoFallback(id)
             return text
         end
     end
-    
+
     return nil
 end
 
 function GearAnalyzer.SafeL(key)
-    if not key or key == "" or key == "AUTO" or key == "None" then 
+    if not key or key == "" or key == "AUTO" or key == "None" then
         if key == "AUTO" then return "Automático" end
         if key == "None" then return "Ninguna" end
-        return "" 
+        return ""
     end
     local L = LibStub("AceLocale-3.0"):GetLocale("GearAnalyzer", true)
     if L then
@@ -116,13 +126,15 @@ function GearAnalyzer.SafeL(key)
     return tostring(key)
 end
 
+GearAnalyzer._cacheCounts = { item = 0, bis = 0, eval = 0 }
+
 function GearAnalyzer:OnInitialize()
     local scanner = CreateFrame("GameTooltip", "GearAnalyzerScanner", nil, "GameTooltipTemplate")
     scanner:SetOwner(WorldFrame, "ANCHOR_NONE")
     self.scanner = scanner
 
     self.db = LibStub("AceDB-3.0"):New("GearAnalyzerDB", defaults)
-    
+
     -- [LAZY LOADING] Metatabla para cargar datos de clase automáticamente bajo demanda
     setmetatable(self.ClassData, {
         __index = function(t, classTag)
@@ -132,7 +144,7 @@ function GearAnalyzer:OnInitialize()
             return nil
         end
     })
-    
+
     -- Anuncio de inicialización ligera
     print("|cff3fc7eb[GearAnalyzer]|r " .. self.version .. " core iniciado. Escribe /ga para abrir.")
 
@@ -155,13 +167,13 @@ function GearAnalyzer:OnInitialize()
     self:RegisterChatCommand("gaprof", "ScanProfession")
     self:RegisterChatCommand("gadebug", "DebugTranslation")
     self:RegisterChatCommand("gaspec", "TestSpecDetection")
-    
+
     self:SetupMinimapButton()
     self.lastHandledSpec = nil
     if self.evaluationCache then wipe(self.evaluationCache) end
-    
+
     if self.initBisTooltip then self:initBisTooltip() end
-    
+
     -- Registrar prefijo para comunicación entre jugadores
     if RegisterAddonMessagePrefix then
         RegisterAddonMessagePrefix("GearAnalyzer")
@@ -171,13 +183,13 @@ end
 function GearAnalyzer:OnEnable()
     self:InitializeAddonData()
     self:BuildActiveMapping()
-    
+
     if IsLoggedIn() then
         self:PLAYER_LOGIN("PLAYER_LOGIN")
     else
         self:RegisterEvent("PLAYER_LOGIN")
     end
-    
+
     self:RegisterEvent("BANKFRAME_OPENED", "OnBankOpened")
     self:RegisterEvent("BANKFRAME_CLOSED", "OnBankClosed")
     self:RegisterEvent("PLAYER_REGEN_DISABLED", "OnCombatEnter")
@@ -189,7 +201,7 @@ end
 function GearAnalyzer:InitializeAddonData()
     local global = self.db.global
     local profile = self.db.profile
-    
+
     if global.customOverrides.enchants then
         local stale = {}
         for key, val in pairs(global.customOverrides.enchants) do
@@ -197,7 +209,7 @@ function GearAnalyzer:InitializeAddonData()
         end
         for _, key in ipairs(stale) do global.customOverrides.enchants[key] = nil end
     end
-    
+
     local MASTER_DB_VERSION = 22
     if (global.EnchantDatabase._version or 0) ~= MASTER_DB_VERSION then
         wipe(global.EnchantDatabase)
@@ -208,7 +220,7 @@ function GearAnalyzer:InitializeAddonData()
         if self.EnchantMasterDB then
             for id, data in pairs(self.EnchantMasterDB) do
                 local entry = {}
-                for k,v in pairs(data) do entry[k] = v end
+                for k, v in pairs(data) do entry[k] = v end
                 entry.originalID = id
                 global.EnchantDatabase[id] = entry
             end
@@ -223,44 +235,49 @@ end
 function GearAnalyzer:LoadClassData(classTag)
     if not classTag then return end
     if rawget(self.ClassData, classTag) then return rawget(self.ClassData, classTag) end
-    
+
     -- Reentrancy guard: prevent recursive calls for the same class while loading
     self._loadingClass = self._loadingClass or {}
     if self._loadingClass[classTag] then return nil end
     self._loadingClass[classTag] = true
-    
+
     local loaders = {
-        ["DEATHKNIGHT"] = self.LoadDeathKnightData, ["DRUID"] = self.LoadDruidData,
-        ["HUNTER"] = self.LoadHunterData, ["MAGE"] = self.LoadMageData,
-        ["PALADIN"] = self.LoadPaladinData, ["PRIEST"] = self.LoadPriestData,
-        ["ROGUE"] = self.LoadRogueData, ["SHAMAN"] = self.LoadShamanData,
-        ["WARLOCK"] = self.LoadWarlockData, ["WARRIOR"] = self.LoadWarriorData,
+        ["DEATHKNIGHT"] = self.LoadDeathKnightData,
+        ["DRUID"] = self.LoadDruidData,
+        ["HUNTER"] = self.LoadHunterData,
+        ["MAGE"] = self.LoadMageData,
+        ["PALADIN"] = self.LoadPaladinData,
+        ["PRIEST"] = self.LoadPriestData,
+        ["ROGUE"] = self.LoadRogueData,
+        ["SHAMAN"] = self.LoadShamanData,
+        ["WARLOCK"] = self.LoadWarlockData,
+        ["WARRIOR"] = self.LoadWarriorData,
     }
     local loader = loaders[classTag]
     if loader then
         loader(self)
     end
-    
-    self._loadingClass[classTag] = nil  -- Release guard
-    
+
+    self._loadingClass[classTag] = nil -- Release guard
+
     if rawget(self.ClassData, classTag) then
         print("|cff3fc7eb[GearAnalyzer]|r Módulo de datos: |cffffff00" .. classTag .. "|r cargado en memoria.")
     end
-    
+
     self:WarmupClassData(classTag)
     return rawget(self.ClassData, classTag)
 end
 
 function GearAnalyzer:WarmupClassData(classTag)
-    local data = rawget(self.ClassData, classTag)  -- rawget avoids __index trigger
+    local data = rawget(self.ClassData, classTag) -- rawget avoids __index trigger
     if not data then return end
-    
+
     self:ScheduleTimer(function()
         local function Request(id)
             if not id or id == 0 then return end
             -- Triple petición para asegurar que el servidor responda
             GetItemInfo(id)
-            GetItemInfo("item:"..id)
+            GetItemInfo("item:" .. id)
             -- Crear un link falso para forzar al cliente a pedirlo
             local link = string.format("|Hitem:%d:0:0:0:0:0:0:0|h[Item]|h", id)
             GetItemInfo(link)
@@ -312,14 +329,10 @@ end
 
 function GearAnalyzer:RegisterHeavyEvents()
     self:RegisterEvent("PLAYER_EQUIPMENT_CHANGED", "OnGearChanged")
-    self:RegisterEvent("BAG_UPDATE", "OnGearChanged")
-    self:RegisterEvent("UNIT_INVENTORY_CHANGED", "OnGearChanged")
     self:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED", "OnTalentChanged")
     self:RegisterEvent("PLAYER_TALENT_UPDATE", "OnTalentChanged")
     self:RegisterEvent("CHARACTER_POINTS_CHANGED", "OnTalentChanged")
     self:RegisterEvent("BAG_UPDATE_DELAYED", "OnGearChanged")
-    self:RegisterEvent("UNIT_STATS", "OnStatsChanged")
-    self:RegisterEvent("UNIT_AURA", "OnStatsChanged")
     self:RegisterEvent("GLYPH_UPDATED", "OnTalentChanged")
     self:RegisterEvent("GLYPH_ADDED", "OnTalentChanged")
     self:RegisterEvent("SOCKET_INFO_UPDATE", "OnGearChanged")
@@ -327,14 +340,10 @@ end
 
 function GearAnalyzer:UnregisterHeavyEvents()
     self:UnregisterEvent("PLAYER_EQUIPMENT_CHANGED")
-    self:UnregisterEvent("BAG_UPDATE")
-    self:UnregisterEvent("UNIT_INVENTORY_CHANGED")
     self:UnregisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
     self:UnregisterEvent("PLAYER_TALENT_UPDATE")
     self:UnregisterEvent("CHARACTER_POINTS_CHANGED")
     self:UnregisterEvent("BAG_UPDATE_DELAYED")
-    self:UnregisterEvent("UNIT_STATS")
-    self:UnregisterEvent("UNIT_AURA")
     self:UnregisterEvent("GLYPH_UPDATED")
     self:UnregisterEvent("GLYPH_ADDED")
     self:UnregisterEvent("SOCKET_INFO_UPDATE")

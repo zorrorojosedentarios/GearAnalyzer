@@ -167,94 +167,96 @@ function Tab:Update(page, ignoreForced)
         row.name = name
         row.link = link
 
-        -- LÓGICA MODO DEVELOPER
-        local isDev = GearAnalyzer.charDB and GearAnalyzer.charDB.settings and GearAnalyzer.charDB.settings.devMode
-        if isDev then
-            if not row.devEdit then
-                -- Crear EditBox puro para evitar bloques negros
-                local edit = CreateFrame("EditBox", nil, row)
-                edit:SetSize(70, 20)
-                edit:SetPoint("LEFT", 5, 0)
-                edit:SetAutoFocus(false)
-                edit:SetFontObject("GameFontHighlightSmall")
-                edit:SetJustifyH("CENTER")
-                edit:EnableMouse(true)
-                row.devEdit = edit
-                edit:SetFrameLevel(45)
-                
-                -- Fondo sólido manual
-                local bgt = edit:CreateTexture(nil, "BACKGROUND")
-                bgt:SetAllPoints()
-                bgt:SetTexture(0, 0, 0.4, 0.8) -- Azul oscuro
-                edit.bgt = bgt
-                
-                local reset = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
-                reset:SetSize(20, 20)
-                reset:SetPoint("LEFT", edit, "RIGHT", 5, 0)
-                reset:SetText("R")
-                row.devReset = reset
-                reset:SetFrameLevel(45)
-            end
+            -- LÓGICA MODO DEVELOPER
+            local isDev = GearAnalyzer.charDB and GearAnalyzer.charDB.settings and GearAnalyzer.charDB.settings.devMode
+            if isDev then
+                if not row.devEdit then
+                    -- Crear EditBox puro para evitar bloques negros
+                    local edit = CreateFrame("EditBox", nil, row)
+                    edit:SetSize(70, 20)
+                    edit:SetPoint("LEFT", 5, 0)
+                    edit:SetAutoFocus(false)
+                    edit:SetFontObject("GameFontHighlightSmall")
+                    edit:SetJustifyH("CENTER")
+                    edit:EnableMouse(true)
+                    row.devEdit = edit
+                    edit:SetFrameLevel(45)
+                    
+                    -- Fondo sólido manual
+                    local bgt = edit:CreateTexture(nil, "BACKGROUND")
+                    bgt:SetAllPoints()
+                    bgt:SetTexture(0, 0, 0.4, 0.8) -- Azul oscuro
+                    edit.bgt = bgt
+                    
+                    local reset = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
+                    reset:SetSize(20, 20)
+                    reset:SetPoint("LEFT", edit, "RIGHT", 5, 0)
+                    reset:SetText("R")
+                    row.devReset = reset
+                    reset:SetFrameLevel(45)
 
-            -- REAJUSTAR ELEMENTOS PARA DAR ESPACIO (Evita solapamientos)
-            row.icon:ClearAllPoints()
-            row.icon:SetPoint("LEFT", 110, 0)
-            
-            row.typeText:ClearAllPoints()
-            row.typeText:SetPoint("LEFT", row.icon, "RIGHT", 12, 10)
-            
-            row.nameText:ClearAllPoints()
-            row.nameText:SetPoint("LEFT", row.icon, "RIGHT", 12, -10)
-            
-            -- Bloquear clics de la fila en la zona del EditBox
-            row:SetHitRectInsets(100, 0, 0, 0)
-
-            -- Forzar texto inicial
-            if not row.devEdit:HasFocus() then
-                row.devEdit:SetText(tostring(gData.id))
-            end
-
-            row.devEdit:SetScript("OnEnterPressed", function(self)
-                local newID = tonumber(self:GetText())
-                if newID then
-                    local class = GearAnalyzer:GetClassToken()
-                    GearAnalyzer.db.global.customOverrides.gems[class .. "_" .. spec .. "_" .. overrideKey] = newID
-                    GearAnalyzer:FullReload()
+                    edit:SetScript("OnEnterPressed", function(s)
+                        local r = s:GetParent()
+                        local newID = tonumber(s:GetText())
+                        if newID and r._gemOverrideKey then
+                            GearAnalyzer.db.global.customOverrides.gems[r._gemOverrideKey] = newID
+                            GearAnalyzer:FullReload()
+                        end
+                        s:ClearFocus()
+                    end)
+                    edit:SetScript("OnEscapePressed", function(s)
+                        local r = s:GetParent()
+                        s:SetText(tostring(r._devCurrID or 0))
+                        s:ClearFocus()
+                    end)
+                    reset:SetScript("OnClick", function(s)
+                        local r = s:GetParent()
+                        if r._gemOverrideKey then
+                            GearAnalyzer.db.global.customOverrides.gems[r._gemOverrideKey] = nil
+                            GearAnalyzer:FullReload()
+                        end
+                    end)
+                    row:SetScript("OnHide", function(s)
+                        if s.devEdit then s.devEdit:ClearFocus() end
+                    end)
                 end
-                self:ClearFocus()
-            end)
 
-            row.devEdit:SetScript("OnEscapePressed", function(self)
-                self:SetText(tostring(gData.id))
-                self:ClearFocus()
-            end)
-            
-            row.devReset:SetScript("OnClick", function()
-                local class = GearAnalyzer:GetClassToken()
-                GearAnalyzer.db.global.customOverrides.gems[class .. "_" .. spec .. "_" .. overrideKey] = nil
-                GearAnalyzer:FullReload()
-            end)
+                row._gemOverrideKey = GearAnalyzer:GetClassToken() .. "_" .. spec .. "_" .. overrideKey
+                row._devCurrID = currentID or gData.id or 0
 
-            -- Asegurar que al ocultar la fila se pierda el foco
-            row:SetScript("OnHide", function()
-                if row.devEdit then row.devEdit:ClearFocus() end
-            end)
+                -- REAJUSTAR ELEMENTOS PARA DAR ESPACIO (Evita solapamientos)
+                row.icon:ClearAllPoints()
+                row.icon:SetPoint("LEFT", 110, 0)
+                
+                row.typeText:ClearAllPoints()
+                row.typeText:SetPoint("LEFT", row.icon, "RIGHT", 12, 10)
+                
+                row.nameText:ClearAllPoints()
+                row.nameText:SetPoint("LEFT", row.icon, "RIGHT", 12, -10)
+                
+                -- Bloquear clics de la fila en la zona del EditBox
+                row:SetHitRectInsets(100, 0, 0, 0)
 
-            row.devEdit:Show()
-            row.devReset:Show()
-        elseif row.devEdit then
-            row.devEdit:Hide()
-            row.devReset:Hide()
-            
-            -- Restaurar posiciones originales si no es Dev
-            row.icon:ClearAllPoints()
-            row.icon:SetPoint("LEFT", 10, 0)
-            row.typeText:ClearAllPoints()
-            row.typeText:SetPoint("LEFT", row.icon, "RIGHT", 12, 10)
-            row.nameText:ClearAllPoints()
-            row.nameText:SetPoint("LEFT", row.icon, "RIGHT", 12, -10)
-            row:SetHitRectInsets(0, 0, 0, 0)
-        end
+                -- Forzar texto inicial
+                if not row.devEdit:HasFocus() then
+                    row.devEdit:SetText(tostring(row._devCurrID))
+                end
+
+                row.devEdit:Show()
+                row.devReset:Show()
+            elseif row.devEdit then
+                row.devEdit:Hide()
+                row.devReset:Hide()
+                
+                -- Restaurar posiciones originales si no es Dev
+                row.icon:ClearAllPoints()
+                row.icon:SetPoint("LEFT", 10, 0)
+                row.typeText:ClearAllPoints()
+                row.typeText:SetPoint("LEFT", row.icon, "RIGHT", 12, 10)
+                row.nameText:ClearAllPoints()
+                row.nameText:SetPoint("LEFT", row.icon, "RIGHT", 12, -10)
+                row:SetHitRectInsets(0, 0, 0, 0)
+            end
         
         -- AJUSTAR TAMAÑO DINÁMICO
         local iconSize = GearAnalyzer.db.profile.settings.iconSize or 32

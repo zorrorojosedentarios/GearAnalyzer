@@ -47,7 +47,7 @@ function Tab:Update(page, ignoreForced)
     local className = classTag -- "WARLOCK", "PRIEST", etc.
     
     local bisSpec = GearAnalyzer:GetBiSTooltipSpec(true)
-    
+    local manualData
     if className and bisSpec and GA_BiSLists[className] and GA_BiSLists[className][bisSpec] then
         manualData = GA_BiSLists[className][bisSpec]["T10"] or GA_BiSLists[className][bisSpec]["PR"]
     end

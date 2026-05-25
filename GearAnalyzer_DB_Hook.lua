@@ -160,6 +160,13 @@ local function OnGameTooltipSetItem(tooltip)
         if not GearAnalyzer.bisTooltipCache then GearAnalyzer.bisTooltipCache = {} end
         if not GearAnalyzer.bisTooltipCache[itemId] then
             GearAnalyzer.bisTooltipCache[itemId] = {}
+            if GearAnalyzer._cacheCounts then
+                GearAnalyzer._cacheCounts.bis = GearAnalyzer._cacheCounts.bis + 1
+                if GearAnalyzer._cacheCounts.bis > 200 then
+                    wipe(GearAnalyzer.bisTooltipCache)
+                    GearAnalyzer._cacheCounts.bis = 0
+                end
+            end
             wipe(ga_groupedCache)
             wipe(ga_orderCache)
             ga_groupPoolIdx = 0

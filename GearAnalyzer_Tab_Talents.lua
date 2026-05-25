@@ -235,6 +235,11 @@ function Tab:RenderTreeGrid(pane, tabIndex, guideData, isSimulated, layoutDB, is
     if not pane.talentIcons then pane.talentIcons = {} end
     for _, icon in pairs(pane.talentIcons) do icon:Hide() end
 
+    -- Store per-call data on pane so pre-set scripts can read them
+    pane._guideData = guideData
+    pane._isSimulated = isSimulated
+    pane._showGuide = self.isGuideMode
+
     local numTalents = 0
     if isPet then
         numTalents = GetNumTalents(1, false, true) or 0
@@ -249,9 +254,7 @@ function Tab:RenderTreeGrid(pane, tabIndex, guideData, isSimulated, layoutDB, is
 
     for i = 1, numTalents do
         local name, icon, tier, column, rank, maxRank
-        if isPet then
-            name, icon, tier, column, rank, maxRank = GetTalentInfo(1, i, false, true)
-        elseif isSimulated and layoutDB and layoutDB[tabIndex] and layoutDB[tabIndex][i] then
+        if isSimulated and layoutDB then
             local d = layoutDB[tabIndex][i]
             name, icon, tier, column, maxRank = d.name, d.icon, d.tier, d.column, d.maxRank
             rank = guideData and guideData[i] or 0
@@ -270,8 +273,40 @@ function Tab:RenderTreeGrid(pane, tabIndex, guideData, isSimulated, layoutDB, is
                 f.border = f:CreateTexture(nil, "OVERLAY"); f.border:SetTexture("Interface\\Buttons\\UI-Quickslot2"); f.border:SetSize(42, 42); f.border:SetPoint("CENTER")
                 f.count = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
                 f.count:SetPoint("BOTTOMRIGHT", 2, -1)
+                f:SetScript("OnEnter", function(s)
+                    local par = s:GetParent()
+                    GameTooltip:SetOwner(s, "ANCHOR_RIGHT")
+                    if s._isPet then GameTooltip:SetTalent(1, s._talentIdx, false, true) else GameTooltip:SetTalent(s._tabIdx, s._talentIdx) end
+                    local gd = par._guideData
+                    if gd and par._showGuide then
+                        local sug = gd[s._talentIdx] or 0
+                        local act = 0
+                        if not par._isSimulated then
+                            if s._isPet then
+                                local _, _, _, _, petRank = GetTalentInfo(1, s._talentIdx, false, true)
+                                act = petRank or 0
+                            else
+                                local _, _, _, _, playerRank = GetTalentInfo(s._tabIdx, s._talentIdx)
+                                act = playerRank or 0
+                            end
+                        end
+                        GameTooltip:AddLine(" ")
+                        GameTooltip:AddLine("|cffffd100" .. (L["SUGGESTED_POINTS"] or "Puntos sugeridos:") .. "|r |cffffffff" .. sug .. " / " .. (s._maxRank or 5) .. "|r")
+                        if not par._isSimulated then
+                            GameTooltip:AddLine("|cff00ff00Puntos invertidos:|r |cffffffff" .. act .. " / " .. (s._maxRank or 5) .. "|r")
+                        end
+                    end
+                    GameTooltip:Show()
+                end)
+                f:SetScript("OnLeave", function() GameTooltip:Hide() end)
                 pane.talentIcons[i] = f
             end
+
+            -- Update per-talent data for pre-set script
+            f._tabIdx = tabIndex
+            f._talentIdx = i
+            f._isPet = isPet
+            f._maxRank = maxRank
 
             f:SetPoint("TOPLEFT", (column - 1) * spacingH + xOff, -(tier - 1) * spacingV - yOff)
             f.tex:SetTexture(icon)
@@ -289,32 +324,6 @@ function Tab:RenderTreeGrid(pane, tabIndex, guideData, isSimulated, layoutDB, is
             end
 
             f:Show()
-            f:SetScript("OnEnter", function(s) 
-                GameTooltip:SetOwner(s, "ANCHOR_RIGHT")
-                if isPet then GameTooltip:SetTalent(1, i, false, true) else GameTooltip:SetTalent(tabIndex, i) end
-                
-                if self.isGuideMode and guideData then
-                    local sug = guideData[i] or 0
-                    local act = 0
-                    if not isSimulated then
-                        if isPet then
-                            local _, _, _, _, petRank = GetTalentInfo(1, i, false, true)
-                            act = petRank or 0
-                        else
-                            local _, _, _, _, playerRank = GetTalentInfo(tabIndex, i)
-                            act = playerRank or 0
-                        end
-                    end
-                    GameTooltip:AddLine(" ")
-                    GameTooltip:AddLine("|cffffd100" .. (L["SUGGESTED_POINTS"] or "Puntos sugeridos:") .. "|r |cffffffff" .. sug .. " / " .. (maxRank or 5) .. "|r")
-                    if not isSimulated then
-                        GameTooltip:AddLine("|cff00ff00Puntos invertidos:|r |cffffffff" .. act .. " / " .. (maxRank or 5) .. "|r")
-                    end
-                end
-                
-                GameTooltip:Show()
-            end)
-            f:SetScript("OnLeave", function() GameTooltip:Hide() end)
         end
     end
 end

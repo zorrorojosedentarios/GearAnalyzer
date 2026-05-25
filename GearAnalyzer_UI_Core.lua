@@ -162,6 +162,9 @@ function UI:CreateGuideFrame()
     UIDropDownMenu_SetText(specDropDown, SafeL(GearAnalyzer.db.profile.settings.forcedSpec))
 
     -- Aumentar tiempo de cierre del menú para que no se cierre al bajar el mouse
+    if not GearAnalyzer._origDropdownTime then
+        GearAnalyzer._origDropdownTime = UIDROPDOWNMENU_CLOSE_TIME_WAIT
+    end
     UIDROPDOWNMENU_CLOSE_TIME_WAIT = 3
 
     for i, key in ipairs(UI.tabsGuide) do

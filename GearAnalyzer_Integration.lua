@@ -147,15 +147,17 @@ function GearAnalyzer:SyncWithBiSTooltip(phase, targetDB, ignoreForced)
             end
 
             if not is17Slots and slotKey == "ring" then
+                local copy = { unpack(db.top6[slotKey]) }
                 db.bis["ring1"]  = { itemID = data[1] }
                 db.bis["ring2"]  = { itemID = data[2] or data[1] }
-                db.top6["ring1"] = db.top6[slotKey]
-                db.top6["ring2"] = db.top6[slotKey]
+                db.top6["ring1"] = copy
+                db.top6["ring2"] = { unpack(copy) }
             elseif not is17Slots and slotKey == "trinket" then
+                local copy = { unpack(db.top6[slotKey]) }
                 db.bis["trinket1"] = { itemID = data[1] }
                 db.bis["trinket2"] = { itemID = data[2] or data[1] }
-                db.top6["trinket1"] = db.top6[slotKey]
-                db.top6["trinket2"] = db.top6[slotKey]
+                db.top6["trinket1"] = copy
+                db.top6["trinket2"] = { unpack(copy) }
             else
                 if data[1] and data[1] > 0 then
                     db.bis[slotKey] = { itemID = data[1] }
