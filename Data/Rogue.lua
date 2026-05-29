@@ -1,0 +1,307 @@
+-- ============================================================
+-- GearAnalyzer: Rogue (ROGUE)
+-- Data-on-Demand Module
+-- ============================================================
+local GearAnalyzer = LibStub("AceAddon-3.0"):GetAddon("GearAnalyzer")
+
+function GearAnalyzer:LoadRogueData()
+    if rawget(self.ClassData, "ROGUE") then return end
+
+    self.ClassData["ROGUE"] = {
+        Glyphs = {
+            ["Assassination"] = {
+                major = { 45768, 45768, 45761 }, -- Mutilar, Secretos del oficio, Hambre de sangre
+                minor = { 43377, 43343, 43378 }  -- Distraer, Esfumarse, Caída segura
+            },
+            ["Combat"] = {
+                major = { 45762, 45768, 45766 }, -- Asesinato múltiple, Secretos del oficio, Abanico de cuchillos
+                minor = { 43377, 43343, 43378 }  -- Distraer, Esfumarse, Caída segura
+            },
+        },
+        Gems = {
+            ["Assassination"] = {
+                meta = 41398, -- Diamante de asedio de tierra incansable (+21 Agilidad / +3% CD)
+                red = 40112, -- Rubí cárdeno delicado (+20 Agilidad) o 40114 (AP)
+                yellow = 40147, -- Ametrino mortal (+10 Agilidad / +10 Crítico) o 40155 (SP/Haste)
+                blue = 40112, -- Agilidad por defecto
+                prismatic = 49110, -- Lágrima de pesadilla
+                prismaticSlot = "chest",
+                note = "CLASE ESTÁTICA: Full Agilidad o AP. No usa ArPen (daño de venenos es de Naturaleza)."
+            },
+            ["Combat"] = {
+                meta = 41398, -- Diamante de asedio de tierra incansable (+21 Agilidad / +3% CD)
+                red = 40117, -- Rubí cárdeno fracturado (+20 ArPen)
+                yellow = 40155, -- Ametrino temerario (+12 SP / +10 Celeridad) -> O Ametrino letal / celeridad pura
+                blue = 40117, -- ArPen por defecto
+                prismatic = 49110, -- Lágrima de pesadilla
+                prismaticSlot = "chest",
+                note = "ARPEN DESDE DÍA 1. Soft Cap 722 con Escorpión o Estandarte. Hard Cap 1400 pasivo. Celeridad en gemas amarillas/híbridas al llegar al Hard Cap."
+            },
+        },
+        TalentTrees = {
+            [1] = { name = "Assassination", icon = "Interface\\Icons\\Ability_Rogue_Eviscerate" },
+            [2] = { name = "Combat", icon = "Interface\\Icons\\Ability_BackStab" },
+            [3] = { name = "Subtlety", icon = "Interface\\Icons\\Ability_Stealth" },
+        },
+        Caps = {
+            ["Assassination"] = {
+                role = "MeleeDPS",
+                hitCap = { percent = 17, rating = 315, note = "Cap Venenos/Hechizos (315 rating)" },
+                expertiseCap = { skill = 26, rating = 214 },
+                priorities = {
+                    { stat = "AGI", label = "Agilidad", note = "Full Agilidad o AP" },
+                    { stat = "AP", label = "Poder de Ataque" },
+                    { stat = "HASTE", label = "Celeridad" },
+                }
+            },
+            ["Combat"] = {
+                role = "MeleeDPS",
+                hitCap = { percent = 8, rating = 263, note = "8% Físico (263 rating) / Venenos 315" },
+                expertiseCap = { skill = 26, rating = 214 },
+                priorities = {
+                    { stat = "ARPEN", cap = 1400, label = "ArPen", note = "Soft Cap 722 (con Escorpión) / Hard Cap 1400 Pasivo" },
+                    { stat = "HASTE", label = "Celeridad", note = "Gemas amarillas e híbridas tras Hard Cap" },
+                    { stat = "AGI", label = "Agilidad" },
+                }
+            },
+        },
+        Enchants = {
+            ["Assassination"] = {
+                ["weapon"]    = 3789,   -- Rabiar
+                ["head"]      = 3817,   -- Arcanum de tormento
+                ["shoulders"] = 3808,   -- Inscripción del hacha superior
+                ["back"]      = 3831,   -- Agilidad sublime (+22)
+                ["chest"]     = 3832,   -- Estadísticas potentes (+10)
+                ["wrists"]    = 3845,
+                ["hands"]     = 1603,
+                ["legs"]      = 3822,   -- Armadura de pierna de escama de hielo
+                ["feet"]      = 3826,   -- Caminante de hielo
+                ["waist"]     = 3731,   -- Hebilla eterna
+                ["offhand"]   = 0,
+            },
+            ["Combat"] = {
+                ["weapon"]    = 3789,
+                ["head"]      = 3817,
+                ["shoulders"] = 3808,
+                ["back"]      = 3831,
+                ["chest"]     = 3832,
+                ["wrists"]    = 3845,
+                ["hands"]     = 1603,
+                ["legs"]      = 3822,
+                ["feet"]      = 3826,
+                ["waist"]     = 3731,
+                ["offhand"]   = 3789,
+            },
+        },
+        Talents = {
+            ["Assassination"] = {
+                label = "51/18/2 - Picaro Asesinato (Mutilar Build)",
+                exportCode = "00530300535210052010333105100500500500300000000000000002000000000000000000000000000",
+                [1] = { name = "Assassination", points = 51 }, [2] = { name = "Combat", points = 18 }, [3] = { name = "Subtlety", points = 2 }
+            },
+            ["Combat"] = {
+                label = "15/51/5 - Picaro Combate (ArPen Build)",
+                exportCode = "30520000514000000000000000002520510000350152231005012510000000000000000000000000000",
+                [1] = { name = "Assassination", points = 15 }, [2] = { name = "Combat", points = 51 }, [3] = { name = "Subtlety", points = 5 }
+            },
+        }
+    }
+
+    GA_BiSLists["ROGUE"] = GA_BiSLists["ROGUE"] or {}
+GA_BiSLists["ROGUE"]["Assassination"] = {};
+GA_BiSLists["ROGUE"]["Assassination"]["PR"] = {};
+GA_BiSLists["ROGUE"]["Assassination"]["T9"] = {};
+GA_BiSLists["ROGUE"]["Assassination"]["T10"] = {};
+GA_BiSLists["ROGUE"]["Assassination"]["RS"] = {};
+GA_BiSLists["ROGUE"]["Assassination"]["PR"][1] = { ["slot_name"] = "Head", ["enhs"] = { [1] = { ["type"] = "item", ["id"] = 44879 }, [2] = { ["type"] = "item", ["id"] = 41398 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 42702 } }, [1] = 37293, [2] = 39399, [3] = 39561, [4] = 42550, [5] = 34244, [6] = 32235 }
+GA_BiSLists["ROGUE"]["Assassination"]["PR"][2] = { ["slot_name"] = "Neck", ["enhs"] = { }, [1] = 40678, [2] = 39146, [3] = 39421, [4] = 44659, [5] = 42645, [6] = 37861 }
+GA_BiSLists["ROGUE"]["Assassination"]["PR"][3] = { ["slot_name"] = "Shoulder", ["enhs"] = { [1] = { ["type"] = "item", ["id"] = 44871 }, [2] = { ["type"] = "item", ["id"] = 40003 } }, [1] = 37139, [2] = 39237, [3] = 39565, [4] = 43481, [5] = 37593, [6] = 34195 }
+GA_BiSLists["ROGUE"]["Assassination"]["PR"][4] = { ["slot_name"] = "Back", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60663 } }, [1] = 43566, [2] = 39404, [3] = 39297, [4] = 38614, [5] = 43406, [6] = 37840 }
+GA_BiSLists["ROGUE"]["Assassination"]["PR"][5] = { ["slot_name"] = "Chest", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60692 }, [2] = { ["type"] = "item", ["id"] = 39999 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 39999 } }, [1] = 39558, [2] = 43990, [3] = 39386, [4] = 37219, [5] = 37165, [6] = 44303 }
+GA_BiSLists["ROGUE"]["Assassination"]["PR"][6] = { ["slot_name"] = "Wrist", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 44575 }, [2] = { ["type"] = "item", ["id"] = 40003 } }, [1] = 34448, [2] = 44203, [3] = 37366, [4] = 39247, [5] = 37853, [6] = 41830 }
+GA_BiSLists["ROGUE"]["Assassination"]["PR"][7] = { ["slot_name"] = "Hands", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60668 }, [2] = { ["type"] = "item", ["id"] = 40014 } }, [1] = 39560, [2] = 37409, [3] = 37846, [4] = 34370, [5] = 37678, [6] = 44397 }
+GA_BiSLists["ROGUE"]["Assassination"]["PR"][8] = { ["slot_name"] = "Waist", ["enhs"] = { [1] = { ["type"] = "none", ["id"] = 0 }, [2] = { ["type"] = "item", ["id"] = 40014 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 39999 } }, [1] = 40694, [2] = 37194, [3] = 43484, [4] = 39279, [5] = 34558, [6] = 37243 }
+GA_BiSLists["ROGUE"]["Assassination"]["PR"][9] = { ["slot_name"] = "Legs", ["enhs"] = { [1] = { ["type"] = "item", ["id"] = 38374 } }, [1] = 37644, [2] = 39564, [3] = 39224, [4] = 44179, [5] = 44117, [6] = 34188 }
+GA_BiSLists["ROGUE"]["Assassination"]["PR"][10] = { ["slot_name"] = "Feet", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60763 }, [2] = { ["type"] = "item", ["id"] = 40003 } }, [1] = 34575, [2] = 44297, [3] = 39196, [4] = 37666, [5] = 44024, [6] = 37841 }
+GA_BiSLists["ROGUE"]["Assassination"]["PR"][11] = { ["slot_name"] = "Finger", ["enhs"] = { }, [1] = 37642, [2] = 40586, [3] = 40474, [4] = 39277, [5] = 43251, [6] = 37685 }
+GA_BiSLists["ROGUE"]["Assassination"]["PR"][12] = { ["slot_name"] = "Trinket", ["enhs"] = { }, [1] = 44253, [2] = 40684, [3] = 37166, [4] = 34427, [5] = 37390, [6] = 43573 }
+GA_BiSLists["ROGUE"]["Assassination"]["PR"][13] = { ["slot_name"] = "Weapon", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 59621 } }, [1] = 37856, [2] = 39427, [3] = 37037, [4] = 44166, [5] = 44310, [6] = 42435 }
+GA_BiSLists["ROGUE"]["Assassination"]["PR"][14] = { ["slot_name"] = "Off hand", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 59621 } }, [1] = 37667, [2] = 39420, [3] = 39140, [4] = 40702, [5] = 44193, [6] = 37181 }
+GA_BiSLists["ROGUE"]["Assassination"]["PR"][15] = { ["slot_name"] = "Ranged", ["enhs"] = { }, [1] = 37191, [2] = 39296, [3] = 43612, [4] = 44504, [5] = 40716, [6] = 43284 }
+GA_BiSLists["ROGUE"]["Assassination"]["T9"][1] = { ["slot_name"] = "Head", ["enhs"] = { [1] = { ["type"] = "item", ["id"] = 44879 }, [2] = { ["type"] = "item", ["id"] = 41398 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 42702 } }, [1] = 48230, [2] = 47689, [3] = 47529, [4] = 48225, [5] = 49477, [6] = 45993 }
+GA_BiSLists["ROGUE"]["Assassination"]["T9"][2] = { ["slot_name"] = "Neck", ["enhs"] = { [1] = { ["type"] = "none", ["id"] = 0 }, [2] = { ["type"] = "item", ["id"] = 40118 } }, [1] = 47060, [2] = 49485, [3] = 45945, [4] = 45480, [5] = 45517, [6] = 47915 }
+GA_BiSLists["ROGUE"]["Assassination"]["T9"][3] = { ["slot_name"] = "Shoulder", ["enhs"] = { [1] = { ["type"] = "item", ["id"] = 44871 }, [2] = { ["type"] = "item", ["id"] = 40118 } }, [1] = 48228, [2] = 45245, [3] = 46127, [4] = 45400, [5] = 45677, [6] = 47972 }
+GA_BiSLists["ROGUE"]["Assassination"]["T9"][4] = { ["slot_name"] = "Back", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60663 }, [2] = { ["type"] = "item", ["id"] = 40118 } }, [1] = 47545, [2] = 45461, [3] = 46971, [4] = 45224, [5] = 48673, [6] = 45704 }
+GA_BiSLists["ROGUE"]["Assassination"]["T9"][5] = { ["slot_name"] = "Chest", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60692 }, [2] = { ["type"] = "item", ["id"] = 40114 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 40114 } }, [1] = 48232, [2] = 48223, [3] = 47599, [4] = 47004, [5] = 48219, [6] = 45473 }
+GA_BiSLists["ROGUE"]["Assassination"]["T9"][6] = { ["slot_name"] = "Wrist", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 44575 }, [2] = { ["type"] = "item", ["id"] = 40114 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 40114 } }, [1] = 47155, [2] = 45611, [3] = 47151, [4] = 45869, [5] = 40186, [6] = 47581 }
+GA_BiSLists["ROGUE"]["Assassination"]["T9"][7] = { ["slot_name"] = "Hands", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60668 }, [2] = { ["type"] = "item", ["id"] = 40114 } }, [1] = 48231, [2] = 46043, [3] = 48224, [4] = 46124, [5] = 45325, [6] = 48222 }
+GA_BiSLists["ROGUE"]["Assassination"]["T9"][8] = { ["slot_name"] = "Waist", ["enhs"] = { [1] = { ["type"] = "none", ["id"] = 0 }, [2] = { ["type"] = "item", ["id"] = 40156 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 40114 }, [5] = { ["type"] = "none", ["id"] = 0 }, [6] = { ["type"] = "item", ["id"] = 40114 } }, [1] = 47112, [2] = 47107, [3] = 45829, [4] = 46095, [5] = 45555, [6] = 45547 }
+GA_BiSLists["ROGUE"]["Assassination"]["T9"][9] = { ["slot_name"] = "Legs", ["enhs"] = { [1] = { ["type"] = "item", ["id"] = 38374 }, [2] = { ["type"] = "item", ["id"] = 40114 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 40114 }, [5] = { ["type"] = "none", ["id"] = 0 }, [6] = { ["type"] = "item", ["id"] = 40114 } }, [1] = 46975, [2] = 48229, [3] = 46974, [4] = 48226, [5] = 45846, [6] = 45536 }
+GA_BiSLists["ROGUE"]["Assassination"]["T9"][10] = { ["slot_name"] = "Feet", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60763 }, [2] = { ["type"] = "item", ["id"] = 40156 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 40114 } }, [1] = 47077, [2] = 47919, [3] = 47071, [4] = 47608, [5] = 45564, [6] = 39701 }
+GA_BiSLists["ROGUE"]["Assassination"]["T9"][11] = { ["slot_name"] = "Finger", ["enhs"] = { [1] = { ["type"] = "none", ["id"] = 0 }, [2] = { ["type"] = "item", ["id"] = 40114 } }, [1] = 47075, [2] = 45608, [3] = 46048, [4] = 47934, [5] = 47703, [6] = 45157 }
+GA_BiSLists["ROGUE"]["Assassination"]["T9"][12] = { ["slot_name"] = "Trinket", ["enhs"] = { }, [1] = 47131, [2] = 45609, [3] = 47115, [4] = 45522, [5] = 47734, [6] = 47948 }
+GA_BiSLists["ROGUE"]["Assassination"]["T9"][13] = { ["slot_name"] = "Weapon", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 59621 }, [2] = { ["type"] = "item", ["id"] = 40156 } }, [1] = 46969, [2] = 45484, [3] = 47113, [4] = 45930, [5] = 47938, [6] = 46958 }
+GA_BiSLists["ROGUE"]["Assassination"]["T9"][14] = { ["slot_name"] = "Off hand", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 59621 }, [2] = { ["type"] = "item", ["id"] = 40156 } }, [1] = 46969, [2] = 47113, [3] = 45484, [4] = 45930, [5] = 47938, [6] = 45607 }
+GA_BiSLists["ROGUE"]["Assassination"]["T9"][15] = { ["slot_name"] = "Ranged", ["enhs"] = { [1] = { ["type"] = "none", ["id"] = 0 }, [2] = { ["type"] = "item", ["id"] = 40156 } }, [1] = 47521, [2] = 45570, [3] = 47950, [4] = 45870, [5] = 45296, [6] = 48711 }
+GA_BiSLists["ROGUE"]["Assassination"]["T10"][1] = { ["slot_name"] = "Head", ["enhs"] = { [1] = { ["type"] = "item", ["id"] = 44879 }, [2] = { ["type"] = "item", ["id"] = 41398 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 40114 } }, [1] = 51252, [2] = 50713, [3] = 50073, [4] = 48230, [5] = 51866, [6] = 51187 }
+GA_BiSLists["ROGUE"]["Assassination"]["T10"][2] = { ["slot_name"] = "Neck", ["enhs"] = { [1] = { ["type"] = "none", ["id"] = 0 }, [2] = { ["type"] = "item", ["id"] = 40114 } }, [1] = 50421, [2] = 51890, [3] = 50452, [4] = 50633, [5] = 49485, [6] = 51822 }
+GA_BiSLists["ROGUE"]["Assassination"]["T10"][3] = { ["slot_name"] = "Shoulder", ["enhs"] = { [1] = { ["type"] = "item", ["id"] = 44871 }, [2] = { ["type"] = "item", ["id"] = 40114 } }, [1] = 51254, [2] = 51185, [3] = 50646, [4] = 45245, [5] = 48228, [6] = 49987 }
+GA_BiSLists["ROGUE"]["Assassination"]["T10"][4] = { ["slot_name"] = "Back", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60663 }, [2] = { ["type"] = "item", ["id"] = 40159 } }, [1] = 50653, [2] = 51933, [3] = 45461, [4] = 47545, [5] = 49998, [6] = 50470 }
+GA_BiSLists["ROGUE"]["Assassination"]["T10"][5] = { ["slot_name"] = "Chest", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60692 }, [2] = { ["type"] = "item", ["id"] = 40114 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 49110 }, [5] = { ["type"] = "none", ["id"] = 0 }, [6] = { ["type"] = "item", ["id"] = 40159 } }, [1] = 50656, [2] = 50001, [3] = 48232, [4] = 50972, [5] = 51250, [6] = 51923 }
+GA_BiSLists["ROGUE"]["Assassination"]["T10"][6] = { ["slot_name"] = "Wrist", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 44575 }, [2] = { ["type"] = "item", ["id"] = 40159 } }, [1] = 50670, [2] = 47155, [3] = 45611, [4] = 51820, [5] = 47151, [6] = 50333 }
+GA_BiSLists["ROGUE"]["Assassination"]["T10"][7] = { ["slot_name"] = "Hands", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60668 }, [2] = { ["type"] = "item", ["id"] = 40114 } }, [1] = 51251, [2] = 50675, [3] = 48231, [4] = 46043, [5] = 51251, [6] = 51904 }
+GA_BiSLists["ROGUE"]["Assassination"]["T10"][8] = { ["slot_name"] = "Waist", ["enhs"] = { [1] = { ["type"] = "none", ["id"] = 0 }, [2] = { ["type"] = "item", ["id"] = 40114 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 40114 }, [5] = { ["type"] = "none", ["id"] = 0 }, [6] = { ["type"] = "item", ["id"] = 40114 } }, [1] = 50707, [2] = 51925, [3] = 47112, [4] = 47107, [5] = 50995, [6] = 50067 }
+GA_BiSLists["ROGUE"]["Assassination"]["T10"][9] = { ["slot_name"] = "Legs", ["enhs"] = { [1] = { ["type"] = "item", ["id"] = 38374 }, [2] = { ["type"] = "item", ["id"] = 40114 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 40159 } }, [1] = 51253, [2] = 50697, [3] = 50042, [4] = 46975, [5] = 51186, [6] = 51889 }
+GA_BiSLists["ROGUE"]["Assassination"]["T10"][10] = { ["slot_name"] = "Feet", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60763 }, [2] = { ["type"] = "item", ["id"] = 40159 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 40159 } }, [1] = 50607, [2] = 47077, [3] = 47919, [4] = 49895, [5] = 51856, [6] = 49950 }
+GA_BiSLists["ROGUE"]["Assassination"]["T10"][11] = { ["slot_name"] = "Finger", ["enhs"] = { [1] = { ["type"] = "none", ["id"] = 0 }, [2] = { ["type"] = "item", ["id"] = 40159 } }, [1] = 50402, [2] = 50604, [3] = 50678, [4] = 49949, [5] = 50618, [6] = 51843 }
+GA_BiSLists["ROGUE"]["Assassination"]["T10"][12] = { ["slot_name"] = "Trinket", ["enhs"] = { }, [1] = 50363, [2] = 50706, [3] = 50355, [4] = 50362, [5] = 50343, [6] = 47131 }
+GA_BiSLists["ROGUE"]["Assassination"]["T10"][13] = { ["slot_name"] = "Weapon", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 59621 }, [2] = { ["type"] = "item", ["id"] = 40159 } }, [1] = 50621, [2] = 51868, [3] = 46969, [4] = 45484, [5] = 50736, [6] = 51942 }
+GA_BiSLists["ROGUE"]["Assassination"]["T10"][14] = { ["slot_name"] = "Off hand", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 59621 }, [2] = { ["type"] = "item", ["id"] = 40114 } }, [1] = 50736, [2] = 51942, [3] = 50621, [4] = 50676, [5] = 51868, [6] = 50426 }
+GA_BiSLists["ROGUE"]["Assassination"]["T10"][15] = { ["slot_name"] = "Ranged", ["enhs"] = { [1] = { ["type"] = "none", ["id"] = 0 }, [2] = { ["type"] = "item", ["id"] = 40114 } }, [1] = 50733, [2] = 51880, [3] = 51927, [4] = 45570, [5] = 51940, [6] = 51845 }
+GA_BiSLists["ROGUE"]["Assassination"]["RS"][1] = { ["slot_name"] = "Head", ["enhs"] = { [1] = { ["type"] = "item", ["id"] = 44879 }, [2] = { ["type"] = "item", ["id"] = 41398 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 40114 } }, [1] = 51252, [2] = 50713, [3] = 50073, [4] = 48230, [5] = 51866, [6] = 51187 }
+GA_BiSLists["ROGUE"]["Assassination"]["RS"][2] = { ["slot_name"] = "Neck", ["enhs"] = { [1] = { ["type"] = "none", ["id"] = 0 }, [2] = { ["type"] = "item", ["id"] = 40125 } }, [1] = 50421, [2] = 51890, [3] = 54557, [4] = 50452, [5] = 50633, [6] = 49485 }
+GA_BiSLists["ROGUE"]["Assassination"]["RS"][3] = { ["slot_name"] = "Shoulder", ["enhs"] = { [1] = { ["type"] = "item", ["id"] = 44871 }, [2] = { ["type"] = "item", ["id"] = 40114 } }, [1] = 51254, [2] = 51185, [3] = 50646, [4] = 45245, [5] = 48228, [6] = 49987 }
+GA_BiSLists["ROGUE"]["Assassination"]["RS"][4] = { ["slot_name"] = "Back", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60663 }, [2] = { ["type"] = "item", ["id"] = 40125 } }, [1] = 50653, [2] = 51933, [3] = 45461, [4] = 47545, [5] = 49998, [6] = 50470 }
+GA_BiSLists["ROGUE"]["Assassination"]["RS"][5] = { ["slot_name"] = "Chest", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60692 }, [2] = { ["type"] = "item", ["id"] = 40114 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 49110 }, [5] = { ["type"] = "none", ["id"] = 0 }, [6] = { ["type"] = "item", ["id"] = 40125 } }, [1] = 50656, [2] = 50001, [3] = 54561, [4] = 48232, [5] = 50972, [6] = 51250 }
+GA_BiSLists["ROGUE"]["Assassination"]["RS"][6] = { ["slot_name"] = "Wrist", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 44575 }, [2] = { ["type"] = "item", ["id"] = 40114 } }, [1] = 53126, [2] = 54580, [3] = 47155, [4] = 50670, [5] = 45611, [6] = 51820 }
+GA_BiSLists["ROGUE"]["Assassination"]["RS"][7] = { ["slot_name"] = "Hands", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60668 }, [2] = { ["type"] = "item", ["id"] = 40114 } }, [1] = 51251, [2] = 50675, [3] = 48231, [4] = 46043, [5] = 51251, [6] = 51904 }
+GA_BiSLists["ROGUE"]["Assassination"]["RS"][8] = { ["slot_name"] = "Waist", ["enhs"] = { [1] = { ["type"] = "none", ["id"] = 0 }, [2] = { ["type"] = "item", ["id"] = 40114 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 40114 }, [5] = { ["type"] = "none", ["id"] = 0 }, [6] = { ["type"] = "item", ["id"] = 40114 } }, [1] = 50707, [2] = 51925, [3] = 47112, [4] = 47107, [5] = 50995, [6] = 50067 }
+GA_BiSLists["ROGUE"]["Assassination"]["RS"][9] = { ["slot_name"] = "Legs", ["enhs"] = { [1] = { ["type"] = "item", ["id"] = 38374 }, [2] = { ["type"] = "item", ["id"] = 40114 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 40159 } }, [1] = 51253, [2] = 50697, [3] = 50042, [4] = 46975, [5] = 51186, [6] = 51889 }
+GA_BiSLists["ROGUE"]["Assassination"]["RS"][10] = { ["slot_name"] = "Feet", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60763 }, [2] = { ["type"] = "item", ["id"] = 40159 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 40159 } }, [1] = 50607, [2] = 47077, [3] = 47919, [4] = 49895, [5] = 51856, [6] = 49950 }
+GA_BiSLists["ROGUE"]["Assassination"]["RS"][11] = { ["slot_name"] = "Finger", ["enhs"] = { [1] = { ["type"] = "none", ["id"] = 0 }, [2] = { ["type"] = "item", ["id"] = 40159 } }, [1] = 50402, [2] = 54576, [3] = 50604, [4] = 50678, [5] = 49949, [6] = 50618 }
+GA_BiSLists["ROGUE"]["Assassination"]["RS"][12] = { ["slot_name"] = "Trinket", ["enhs"] = { }, [1] = 54590, [2] = 50363, [3] = 50706, [4] = 54569, [5] = 50355, [6] = 50362 }
+GA_BiSLists["ROGUE"]["Assassination"]["RS"][13] = { ["slot_name"] = "Weapon", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 59621 }, [2] = { ["type"] = "item", ["id"] = 40159 } }, [1] = 50621, [2] = 51868, [3] = 46969, [4] = 45484, [5] = 50736, [6] = 51942 }
+GA_BiSLists["ROGUE"]["Assassination"]["RS"][14] = { ["slot_name"] = "Off hand", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 59621 }, [2] = { ["type"] = "item", ["id"] = 40114 } }, [1] = 50736, [2] = 51942, [3] = 50621, [4] = 50676, [5] = 51868, [6] = 50426 }
+GA_BiSLists["ROGUE"]["Assassination"]["RS"][15] = { ["slot_name"] = "Ranged", ["enhs"] = { [1] = { ["type"] = "none", ["id"] = 0 }, [2] = { ["type"] = "item", ["id"] = 40114 } }, [1] = 50733, [2] = 51880, [3] = 51927, [4] = 45570, [5] = 51940, [6] = 51845 }
+GA_BiSLists["ROGUE"]["Combat"] = {};
+GA_BiSLists["ROGUE"]["Combat"]["PR"] = {};
+GA_BiSLists["ROGUE"]["Combat"]["T9"] = {};
+GA_BiSLists["ROGUE"]["Combat"]["T10"] = {};
+GA_BiSLists["ROGUE"]["Combat"]["RS"] = {};
+GA_BiSLists["ROGUE"]["Combat"]["PR"][1] = { ["slot_name"] = "Head", ["enhs"] = { [1] = { ["type"] = "item", ["id"] = 44879 }, [2] = { ["type"] = "item", ["id"] = 41398 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 42702 } }, [1] = 37293, [2] = 39399, [3] = 39561, [4] = 42550, [5] = 34244, [6] = 32235 }
+GA_BiSLists["ROGUE"]["Combat"]["PR"][2] = { ["slot_name"] = "Neck", ["enhs"] = { }, [1] = 40678, [2] = 39146, [3] = 39421, [4] = 44659, [5] = 42645, [6] = 37861 }
+GA_BiSLists["ROGUE"]["Combat"]["PR"][3] = { ["slot_name"] = "Shoulder", ["enhs"] = { [1] = { ["type"] = "item", ["id"] = 44871 }, [2] = { ["type"] = "item", ["id"] = 39999 } }, [1] = 37139, [2] = 39237, [3] = 39565, [4] = 43481, [5] = 34195, [6] = 37593 }
+GA_BiSLists["ROGUE"]["Combat"]["PR"][4] = { ["slot_name"] = "Back", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60663 } }, [1] = 43566, [2] = 39404, [3] = 39297, [4] = 38614, [5] = 43406, [6] = 34241 }
+GA_BiSLists["ROGUE"]["Combat"]["PR"][5] = { ["slot_name"] = "Chest", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60692 }, [2] = { ["type"] = "item", ["id"] = 39999 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 39999 } }, [1] = 39558, [2] = 43990, [3] = 39386, [4] = 37219, [5] = 37165, [6] = 44303 }
+GA_BiSLists["ROGUE"]["Combat"]["PR"][6] = { ["slot_name"] = "Wrist", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 44575 }, [2] = { ["type"] = "item", ["id"] = 39999 } }, [1] = 34448, [2] = 39247, [3] = 44203, [4] = 37366, [5] = 37853, [6] = 41830 }
+GA_BiSLists["ROGUE"]["Combat"]["PR"][7] = { ["slot_name"] = "Hands", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60668 }, [2] = { ["type"] = "item", ["id"] = 40014 } }, [1] = 39560, [2] = 37409, [3] = 34370, [4] = 37846, [5] = 36951, [6] = 37678 }
+GA_BiSLists["ROGUE"]["Combat"]["PR"][8] = { ["slot_name"] = "Waist", ["enhs"] = { [1] = { ["type"] = "none", ["id"] = 0 }, [2] = { ["type"] = "item", ["id"] = 40014 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 40014 } }, [1] = 40694, [2] = 39279, [3] = 37194, [4] = 43484, [5] = 34558, [6] = 37243 }
+GA_BiSLists["ROGUE"]["Combat"]["PR"][9] = { ["slot_name"] = "Legs", ["enhs"] = { [1] = { ["type"] = "item", ["id"] = 38374 } }, [1] = 37644, [2] = 39564, [3] = 39224, [4] = 34188, [5] = 44117, [6] = 44179 }
+GA_BiSLists["ROGUE"]["Combat"]["PR"][10] = { ["slot_name"] = "Feet", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60763 } }, [1] = 34575, [2] = 44297, [3] = 39196, [4] = 37666, [5] = 43312, [6] = 44024 }
+GA_BiSLists["ROGUE"]["Combat"]["PR"][11] = { ["slot_name"] = "Finger", ["enhs"] = { }, [1] = 40586, [2] = 42642, [3] = 40474, [4] = 43993, [5] = 39277, [6] = 37642 }
+GA_BiSLists["ROGUE"]["Combat"]["PR"][12] = { ["slot_name"] = "Trinket", ["enhs"] = { }, [1] = 44253, [2] = 40684, [3] = 37166, [4] = 34427, [5] = 37390, [6] = 43573 }
+GA_BiSLists["ROGUE"]["Combat"]["PR"][13] = { ["slot_name"] = "Weapon", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 59621 } }, [1] = 37693, [2] = 39416, [3] = 39291, [4] = 40429, [5] = 43611, [6] = 32837 }
+GA_BiSLists["ROGUE"]["Combat"]["PR"][14] = { ["slot_name"] = "Off hand", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 59621 } }, [1] = 37856, [2] = 42248, [3] = 40491, [4] = 39427, [5] = 44311, [6] = 32838 }
+GA_BiSLists["ROGUE"]["Combat"]["PR"][15] = { ["slot_name"] = "Ranged", ["enhs"] = { }, [1] = 37191, [2] = 39296, [3] = 43612, [4] = 44504, [5] = 43284, [6] = 40716 }
+GA_BiSLists["ROGUE"]["Combat"]["T9"][1] = { ["slot_name"] = "Head", ["enhs"] = { [1] = { ["type"] = "item", ["id"] = 44879 }, [2] = { ["type"] = "item", ["id"] = 41398 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 42702 } }, [1] = 48230, [2] = 47689, [3] = 48225, [4] = 49477, [5] = 47529, [6] = 45993 }
+GA_BiSLists["ROGUE"]["Combat"]["T9"][2] = { ["slot_name"] = "Neck", ["enhs"] = { [1] = { ["type"] = "none", ["id"] = 0 }, [2] = { ["type"] = "item", ["id"] = 40114 } }, [1] = 47060, [2] = 49485, [3] = 45945, [4] = 45517, [5] = 45480, [6] = 47915 }
+GA_BiSLists["ROGUE"]["Combat"]["T9"][3] = { ["slot_name"] = "Shoulder", ["enhs"] = { [1] = { ["type"] = "item", ["id"] = 44871 }, [2] = { ["type"] = "item", ["id"] = 40114 } }, [1] = 48228, [2] = 45245, [3] = 46127, [4] = 48227, [5] = 47972, [6] = 45677 }
+GA_BiSLists["ROGUE"]["Combat"]["T9"][4] = { ["slot_name"] = "Back", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60663 }, [2] = { ["type"] = "item", ["id"] = 40114 } }, [1] = 47545, [2] = 48673, [3] = 45461, [4] = 46971, [5] = 47547, [6] = 45224 }
+GA_BiSLists["ROGUE"]["Combat"]["T9"][5] = { ["slot_name"] = "Chest", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60692 }, [2] = { ["type"] = "item", ["id"] = 40114 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 40114 } }, [1] = 48232, [2] = 48223, [3] = 47599, [4] = 47004, [5] = 45473, [6] = 48219 }
+GA_BiSLists["ROGUE"]["Combat"]["T9"][6] = { ["slot_name"] = "Wrist", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 44575 }, [2] = { ["type"] = "item", ["id"] = 40114 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 40114 } }, [1] = 47155, [2] = 45869, [3] = 45611, [4] = 47151, [5] = 47581, [6] = 40186 }
+GA_BiSLists["ROGUE"]["Combat"]["T9"][7] = { ["slot_name"] = "Hands", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60668 }, [2] = { ["type"] = "item", ["id"] = 40114 } }, [1] = 48231, [2] = 46043, [3] = 48224, [4] = 46124, [5] = 45325, [6] = 47945 }
+GA_BiSLists["ROGUE"]["Combat"]["T9"][8] = { ["slot_name"] = "Waist", ["enhs"] = { [1] = { ["type"] = "none", ["id"] = 0 }, [2] = { ["type"] = "item", ["id"] = 40156 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 40114 }, [5] = { ["type"] = "none", ["id"] = 0 }, [6] = { ["type"] = "item", ["id"] = 40114 } }, [1] = 47112, [2] = 47107, [3] = 46095, [4] = 45829, [5] = 45547, [6] = 45555 }
+GA_BiSLists["ROGUE"]["Combat"]["T9"][9] = { ["slot_name"] = "Legs", ["enhs"] = { [1] = { ["type"] = "item", ["id"] = 38374 }, [2] = { ["type"] = "item", ["id"] = 40114 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 40114 }, [5] = { ["type"] = "none", ["id"] = 0 }, [6] = { ["type"] = "item", ["id"] = 40114 } }, [1] = 46975, [2] = 48229, [3] = 46974, [4] = 48226, [5] = 45536, [6] = 45846 }
+GA_BiSLists["ROGUE"]["Combat"]["T9"][10] = { ["slot_name"] = "Feet", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60763 }, [2] = { ["type"] = "item", ["id"] = 40156 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 40114 } }, [1] = 47077, [2] = 47919, [3] = 47071, [4] = 47608, [5] = 45564, [6] = 45232 }
+GA_BiSLists["ROGUE"]["Combat"]["T9"][11] = { ["slot_name"] = "Finger", ["enhs"] = { [1] = { ["type"] = "none", ["id"] = 0 }, [2] = { ["type"] = "item", ["id"] = 40156 } }, [1] = 47934, [2] = 47075, [3] = 46048, [4] = 45157, [5] = 47703, [6] = 45608 }
+GA_BiSLists["ROGUE"]["Combat"]["T9"][12] = { ["slot_name"] = "Trinket", ["enhs"] = { }, [1] = 47131, [2] = 45609, [3] = 45931, [4] = 47115, [5] = 45522, [6] = 46038 }
+GA_BiSLists["ROGUE"]["Combat"]["T9"][13] = { ["slot_name"] = "Weapon", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 59621 }, [2] = { ["type"] = "item", ["id"] = 40156 } }, [1] = 47156, [2] = 47966, [3] = 47148, [4] = 45132, [5] = 45449, [6] = 45947 }
+GA_BiSLists["ROGUE"]["Combat"]["T9"][14] = { ["slot_name"] = "Off hand", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 59621 }, [2] = { ["type"] = "item", ["id"] = 40156 } }, [1] = 47001, [2] = 46036, [3] = 45331, [4] = 47971, [5] = 46996, [6] = 46969 }
+GA_BiSLists["ROGUE"]["Combat"]["T9"][15] = { ["slot_name"] = "Ranged", ["enhs"] = { [1] = { ["type"] = "none", ["id"] = 0 }, [2] = { ["type"] = "item", ["id"] = 40156 } }, [1] = 47521, [2] = 45570, [3] = 47950, [4] = 45296, [5] = 48711, [6] = 45870 }
+GA_BiSLists["ROGUE"]["Combat"]["T10"][1] = { ["slot_name"] = "Head", ["enhs"] = { [1] = { ["type"] = "item", ["id"] = 44879 }, [2] = { ["type"] = "item", ["id"] = 41398 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 40117 } }, [1] = 51252, [2] = 50713, [3] = 51866, [4] = 50073, [5] = 51187, [6] = 48230 }
+GA_BiSLists["ROGUE"]["Combat"]["T10"][2] = { ["slot_name"] = "Neck", ["enhs"] = { [1] = { ["type"] = "none", ["id"] = 0 }, [2] = { ["type"] = "item", ["id"] = 40117 } }, [1] = 50633, [2] = 51890, [3] = 50421, [4] = 51822, [5] = 50452, [6] = 47060 }
+GA_BiSLists["ROGUE"]["Combat"]["T10"][3] = { ["slot_name"] = "Shoulder", ["enhs"] = { [1] = { ["type"] = "item", ["id"] = 44871 }, [2] = { ["type"] = "item", ["id"] = 40117 } }, [1] = 51254, [2] = 50646, [3] = 51830, [4] = 51185, [5] = 48228, [6] = 45245 }
+GA_BiSLists["ROGUE"]["Combat"]["T10"][4] = { ["slot_name"] = "Back", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60663 }, [2] = { ["type"] = "item", ["id"] = 40117 } }, [1] = 47545, [2] = 51933, [3] = 50653, [4] = 50470, [5] = 48673, [6] = 49998 }
+GA_BiSLists["ROGUE"]["Combat"]["T10"][5] = { ["slot_name"] = "Chest", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60692 }, [2] = { ["type"] = "item", ["id"] = 40117 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 40117 }, [5] = { ["type"] = "none", ["id"] = 0 }, [6] = { ["type"] = "item", ["id"] = 40117 } }, [1] = 50656, [2] = 50001, [3] = 51250, [4] = 51923, [5] = 51189, [6] = 48232 }
+GA_BiSLists["ROGUE"]["Combat"]["T10"][6] = { ["slot_name"] = "Wrist", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 44575 }, [2] = { ["type"] = "item", ["id"] = 40117 } }, [1] = 50670, [2] = 47155, [3] = 50333, [4] = 51820, [5] = 45869, [6] = 45611 }
+GA_BiSLists["ROGUE"]["Combat"]["T10"][7] = { ["slot_name"] = "Hands", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60668 }, [2] = { ["type"] = "item", ["id"] = 40117 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 40117 } }, [1] = 50675, [2] = 51904, [3] = 50021, [4] = 51251, [5] = 50982, [6] = 48231 }
+GA_BiSLists["ROGUE"]["Combat"]["T10"][8] = { ["slot_name"] = "Waist", ["enhs"] = { [1] = { ["type"] = "none", ["id"] = 0 }, [2] = { ["type"] = "item", ["id"] = 49110 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 40117 }, [5] = { ["type"] = "none", ["id"] = 0 }, [6] = { ["type"] = "item", ["id"] = 40117 } }, [1] = 50707, [2] = 51925, [3] = 50995, [4] = 47112, [5] = 50067, [6] = 47107 }
+GA_BiSLists["ROGUE"]["Combat"]["T10"][9] = { ["slot_name"] = "Legs", ["enhs"] = { [1] = { ["type"] = "item", ["id"] = 38374 }, [2] = { ["type"] = "item", ["id"] = 40117 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 40117 }, [5] = { ["type"] = "none", ["id"] = 0 }, [6] = { ["type"] = "item", ["id"] = 40117 } }, [1] = 50697, [2] = 51253, [3] = 50042, [4] = 49899, [5] = 48229, [6] = 46975 }
+GA_BiSLists["ROGUE"]["Combat"]["T10"][10] = { ["slot_name"] = "Feet", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60763 }, [2] = { ["type"] = "item", ["id"] = 40117 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 40117 } }, [1] = 50607, [2] = 47077, [3] = 51856, [4] = 49950, [5] = 49895, [6] = 47919 }
+GA_BiSLists["ROGUE"]["Combat"]["T10"][11] = { ["slot_name"] = "Finger", ["enhs"] = { [1] = { ["type"] = "none", ["id"] = 0 }, [2] = { ["type"] = "item", ["id"] = 40117 } }, [1] = 50402, [2] = 50618, [3] = 50604, [4] = 50678, [5] = 51900, [6] = 50186 }
+GA_BiSLists["ROGUE"]["Combat"]["T10"][12] = { ["slot_name"] = "Trinket", ["enhs"] = { }, [1] = 50363, [2] = 50343, [3] = 50362, [4] = 45609, [5] = 50355, [6] = 50342 }
+GA_BiSLists["ROGUE"]["Combat"]["T10"][13] = { ["slot_name"] = "Weapon", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 59621 }, [2] = { ["type"] = "item", ["id"] = 40117 } }, [1] = 50737, [2] = 50672, [3] = 50412, [4] = 50012, [5] = 51916, [6] = 47156 }
+GA_BiSLists["ROGUE"]["Combat"]["T10"][14] = { ["slot_name"] = "Off hand", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 59621 }, [2] = { ["type"] = "item", ["id"] = 40117 } }, [1] = 50654, [2] = 51938, [3] = 50411, [4] = 47001, [5] = 46036, [6] = 45331 }
+GA_BiSLists["ROGUE"]["Combat"]["T10"][15] = { ["slot_name"] = "Ranged", ["enhs"] = { [1] = { ["type"] = "none", ["id"] = 0 }, [2] = { ["type"] = "item", ["id"] = 40117 } }, [1] = 50733, [2] = 51940, [3] = 51845, [4] = 51880, [5] = 51927, [6] = 49981 }
+GA_BiSLists["ROGUE"]["Combat"]["RS"][1] = { ["slot_name"] = "Head", ["enhs"] = { [1] = { ["type"] = "item", ["id"] = 44879 }, [2] = { ["type"] = "item", ["id"] = 41398 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 40117 } }, [1] = 51252, [2] = 50713, [3] = 51866, [4] = 50073, [5] = 51187, [6] = 48230 }
+GA_BiSLists["ROGUE"]["Combat"]["RS"][2] = { ["slot_name"] = "Neck", ["enhs"] = { [1] = { ["type"] = "none", ["id"] = 0 }, [2] = { ["type"] = "item", ["id"] = 40117 } }, [1] = 50633, [2] = 51890, [3] = 50421, [4] = 51822, [5] = 50452, [6] = 47060 }
+GA_BiSLists["ROGUE"]["Combat"]["RS"][3] = { ["slot_name"] = "Shoulder", ["enhs"] = { [1] = { ["type"] = "item", ["id"] = 44871 }, [2] = { ["type"] = "item", ["id"] = 40117 } }, [1] = 51254, [2] = 50646, [3] = 51830, [4] = 51185, [5] = 48228, [6] = 45245 }
+GA_BiSLists["ROGUE"]["Combat"]["RS"][4] = { ["slot_name"] = "Back", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60663 }, [2] = { ["type"] = "item", ["id"] = 40117 } }, [1] = 47545, [2] = 51933, [3] = 50653, [4] = 50470, [5] = 48673, [6] = 49998 }
+GA_BiSLists["ROGUE"]["Combat"]["RS"][5] = { ["slot_name"] = "Chest", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60692 }, [2] = { ["type"] = "item", ["id"] = 40117 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 40117 }, [5] = { ["type"] = "none", ["id"] = 0 }, [6] = { ["type"] = "item", ["id"] = 40117 } }, [1] = 50656, [2] = 50001, [3] = 51250, [4] = 54561, [5] = 51923, [6] = 51189 }
+GA_BiSLists["ROGUE"]["Combat"]["RS"][6] = { ["slot_name"] = "Wrist", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 44575 }, [2] = { ["type"] = "item", ["id"] = 40117 } }, [1] = 54580, [2] = 50670, [3] = 47155, [4] = 50333, [5] = 53126, [6] = 51820 }
+GA_BiSLists["ROGUE"]["Combat"]["RS"][7] = { ["slot_name"] = "Hands", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60668 }, [2] = { ["type"] = "item", ["id"] = 40117 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 40117 } }, [1] = 50675, [2] = 51904, [3] = 50021, [4] = 51251, [5] = 50982, [6] = 48231 }
+GA_BiSLists["ROGUE"]["Combat"]["RS"][8] = { ["slot_name"] = "Waist", ["enhs"] = { [1] = { ["type"] = "none", ["id"] = 0 }, [2] = { ["type"] = "item", ["id"] = 49110 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 40117 }, [5] = { ["type"] = "none", ["id"] = 0 }, [6] = { ["type"] = "item", ["id"] = 40117 } }, [1] = 50707, [2] = 51925, [3] = 50995, [4] = 47112, [5] = 50067, [6] = 47107 }
+GA_BiSLists["ROGUE"]["Combat"]["RS"][9] = { ["slot_name"] = "Legs", ["enhs"] = { [1] = { ["type"] = "item", ["id"] = 38374 }, [2] = { ["type"] = "item", ["id"] = 40117 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 40117 }, [5] = { ["type"] = "none", ["id"] = 0 }, [6] = { ["type"] = "item", ["id"] = 40117 } }, [1] = 50697, [2] = 51253, [3] = 50042, [4] = 49899, [5] = 48229, [6] = 46975 }
+GA_BiSLists["ROGUE"]["Combat"]["RS"][10] = { ["slot_name"] = "Feet", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60763 }, [2] = { ["type"] = "item", ["id"] = 40117 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 40117 } }, [1] = 50607, [2] = 47077, [3] = 51856, [4] = 49950, [5] = 49895, [6] = 47919 }
+GA_BiSLists["ROGUE"]["Combat"]["RS"][11] = { ["slot_name"] = "Finger", ["enhs"] = { [1] = { ["type"] = "none", ["id"] = 0 }, [2] = { ["type"] = "item", ["id"] = 40117 } }, [1] = 50402, [2] = 54576, [3] = 50604, [4] = 50618, [5] = 50678, [6] = 51900 }
+GA_BiSLists["ROGUE"]["Combat"]["RS"][12] = { ["slot_name"] = "Trinket", ["enhs"] = { }, [1] = 54590, [2] = 50363, [3] = 54569, [4] = 50362, [5] = 50343, [6] = 45609 }
+GA_BiSLists["ROGUE"]["Combat"]["RS"][13] = { ["slot_name"] = "Weapon", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 59621 }, [2] = { ["type"] = "item", ["id"] = 40117 } }, [1] = 50737, [2] = 50672, [3] = 50412, [4] = 50012, [5] = 51916, [6] = 47156 }
+GA_BiSLists["ROGUE"]["Combat"]["RS"][14] = { ["slot_name"] = "Off hand", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 59621 }, [2] = { ["type"] = "item", ["id"] = 40117 } }, [1] = 50654, [2] = 51938, [3] = 50411, [4] = 47001, [5] = 46036, [6] = 45331 }
+GA_BiSLists["ROGUE"]["Combat"]["RS"][15] = { ["slot_name"] = "Ranged", ["enhs"] = { [1] = { ["type"] = "none", ["id"] = 0 }, [2] = { ["type"] = "item", ["id"] = 40117 } }, [1] = 50733, [2] = 51940, [3] = 51845, [4] = 51880, [5] = 51927, [6] = 49981 }
+GA_BiSLists["ROGUE"]["Assassination"]["T7"] = {};
+GA_BiSLists["ROGUE"]["Assassination"]["T7"][1] = { ["slot_name"] = "Head", ["enhs"] = { [1] = { ["type"] = "item", ["id"] = 44879 }, [2] = { ["type"] = "item", ["id"] = 41398 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 42702 } }, [1] = 40499, [2] = 39399, [3] = 40329, [4] = 39561, [5] = 42550, [6] = 40296 }
+GA_BiSLists["ROGUE"]["Assassination"]["T7"][2] = { ["slot_name"] = "Neck", ["enhs"] = { [1] = { ["type"] = "none", ["id"] = 0 }, [2] = { ["type"] = "item", ["id"] = 39999 } }, [1] = 44664, [2] = 40065, [3] = 39146, [4] = 40369, [5] = 39421, [6] = 44659 }
+GA_BiSLists["ROGUE"]["Assassination"]["T7"][3] = { ["slot_name"] = "Shoulder", ["enhs"] = { [1] = { ["type"] = "item", ["id"] = 44871 }, [2] = { ["type"] = "item", ["id"] = 39999 } }, [1] = 40502, [2] = 39237, [3] = 40305, [4] = 40437, [5] = 39565, [6] = 37139 }
+GA_BiSLists["ROGUE"]["Assassination"]["T7"][4] = { ["slot_name"] = "Back", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60663 } }, [1] = 40403, [2] = 39404, [3] = 40721, [4] = 40250, [5] = 39297, [6] = 38614 }
+GA_BiSLists["ROGUE"]["Assassination"]["T7"][5] = { ["slot_name"] = "Chest", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60692 }, [2] = { ["type"] = "item", ["id"] = 40003 } }, [1] = 40539, [2] = 40277, [3] = 43990, [4] = 40495, [5] = 39386, [6] = 40319 }
+GA_BiSLists["ROGUE"]["Assassination"]["T7"][6] = { ["slot_name"] = "Wrist", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 44575 } }, [1] = 40186, [2] = 39765, [3] = 40738, [4] = 44203, [5] = 37366, [6] = 39247 }
+GA_BiSLists["ROGUE"]["Assassination"]["T7"][7] = { ["slot_name"] = "Hands", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60668 }, [2] = { ["type"] = "item", ["id"] = 40014 } }, [1] = 40496, [2] = 40541, [3] = 39727, [4] = 39560, [5] = 37409, [6] = 40362 }
+GA_BiSLists["ROGUE"]["Assassination"]["T7"][8] = { ["slot_name"] = "Waist", ["enhs"] = { [1] = { ["type"] = "none", ["id"] = 0 }, [2] = { ["type"] = "item", ["id"] = 39999 } }, [1] = 40205, [2] = 40260, [3] = 40694, [4] = 37194, [5] = 43484, [6] = 39279 }
+GA_BiSLists["ROGUE"]["Assassination"]["T7"][9] = { ["slot_name"] = "Legs", ["enhs"] = { [1] = { ["type"] = "item", ["id"] = 38374 }, [2] = { ["type"] = "item", ["id"] = 39999 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 39999 } }, [1] = 40500, [2] = 44011, [3] = 39761, [4] = 39564, [5] = 40333, [6] = 39224 }
+GA_BiSLists["ROGUE"]["Assassination"]["T7"][10] = { ["slot_name"] = "Feet", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60763 }, [2] = { ["type"] = "item", ["id"] = 40014 } }, [1] = 40243, [2] = 39701, [3] = 44297, [4] = 40748, [5] = 39196, [6] = 34575 }
+GA_BiSLists["ROGUE"]["Assassination"]["T7"][11] = { ["slot_name"] = "Finger", ["enhs"] = { }, [1] = 40474, [2] = 40717, [3] = 40074, [4] = 39277, [5] = 37642, [6] = 40586 }
+GA_BiSLists["ROGUE"]["Assassination"]["T7"][12] = { ["slot_name"] = "Trinket", ["enhs"] = { }, [1] = 44253, [2] = 40684, [3] = 40256, [4] = 40431, [5] = 40531, [6] = 37166 }
+GA_BiSLists["ROGUE"]["Assassination"]["T7"][13] = { ["slot_name"] = "Weapon", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 59621 } }, [1] = 39714, [2] = 37856, [3] = 40368, [4] = 39427, [5] = 37037, [6] = 44166 }
+GA_BiSLists["ROGUE"]["Assassination"]["T7"][14] = { ["slot_name"] = "Off hand", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 59621 } }, [1] = 40386, [2] = 39714, [3] = 40281, [4] = 40368, [5] = 39420, [6] = 39140 }
+GA_BiSLists["ROGUE"]["Assassination"]["T7"][15] = { ["slot_name"] = "Ranged", ["enhs"] = { }, [1] = 40385, [2] = 40190, [3] = 40265, [4] = 39296, [5] = 43612, [6] = 40346 }
+GA_BiSLists["ROGUE"]["Assassination"]["T8"] = {};
+GA_BiSLists["ROGUE"]["Assassination"]["T8"][1] = { ["slot_name"] = "Head", ["enhs"] = { [1] = { ["type"] = "item", ["id"] = 44879 }, [2] = { ["type"] = "item", ["id"] = 41398 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 40003 } }, [1] = 46125, [2] = 45523, [3] = 45993, [4] = 45893, [5] = 45398, [6] = 40499 }
+GA_BiSLists["ROGUE"]["Assassination"]["T8"][2] = { ["slot_name"] = "Neck", ["enhs"] = { [1] = { ["type"] = "none", ["id"] = 0 }, [2] = { ["type"] = "item", ["id"] = 39999 } }, [1] = 45517, [2] = 45945, [3] = 45480, [4] = 40065, [5] = 39146, [6] = 44664 }
+GA_BiSLists["ROGUE"]["Assassination"]["T8"][3] = { ["slot_name"] = "Shoulder", ["enhs"] = { [1] = { ["type"] = "item", ["id"] = 44871 }, [2] = { ["type"] = "item", ["id"] = 40003 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 40003 } }, [1] = 45245, [2] = 46127, [3] = 45400, [4] = 45677, [5] = 45265, [6] = 39237 }
+GA_BiSLists["ROGUE"]["Assassination"]["T8"][4] = { ["slot_name"] = "Back", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60663 }, [2] = { ["type"] = "item", ["id"] = 40052 } }, [1] = 45461, [2] = 45224, [3] = 45704, [4] = 46032, [5] = 45873, [6] = 40403 }
+GA_BiSLists["ROGUE"]["Assassination"]["T8"][5] = { ["slot_name"] = "Chest", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60692 }, [2] = { ["type"] = "item", ["id"] = 40052 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 42702 }, [5] = { ["type"] = "none", ["id"] = 0 }, [6] = { ["type"] = "item", ["id"] = 39999 } }, [1] = 45473, [2] = 46123, [3] = 45940, [4] = 45396, [5] = 40539, [6] = 45453 }
+GA_BiSLists["ROGUE"]["Assassination"]["T8"][6] = { ["slot_name"] = "Wrist", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 44575 }, [2] = { ["type"] = "item", ["id"] = 40052 } }, [1] = 45611, [2] = 45869, [3] = 40186, [4] = 45108, [5] = 39765, [6] = 40738 }
+GA_BiSLists["ROGUE"]["Assassination"]["T8"][7] = { ["slot_name"] = "Hands", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60668 }, [2] = { ["type"] = "item", ["id"] = 39999 } }, [1] = 46124, [2] = 46043, [3] = 45325, [4] = 40541, [5] = 45397, [6] = 39727 }
+GA_BiSLists["ROGUE"]["Assassination"]["T8"][8] = { ["slot_name"] = "Waist", ["enhs"] = { [1] = { ["type"] = "none", ["id"] = 0 }, [2] = { ["type"] = "item", ["id"] = 39999 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 39999 }, [5] = { ["type"] = "none", ["id"] = 0 }, [6] = { ["type"] = "item", ["id"] = 39999 } }, [1] = 46095, [2] = 45829, [3] = 45547, [4] = 45709, [5] = 45555, [6] = 40260 }
+GA_BiSLists["ROGUE"]["Assassination"]["T8"][9] = { ["slot_name"] = "Legs", ["enhs"] = { [1] = { ["type"] = "item", ["id"] = 38374 }, [2] = { ["type"] = "item", ["id"] = 39999 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 39999 }, [5] = { ["type"] = "none", ["id"] = 0 }, [6] = { ["type"] = "item", ["id"] = 39999 } }, [1] = 45536, [2] = 45846, [3] = 44011, [4] = 45141, [5] = 46126, [6] = 40500 }
+GA_BiSLists["ROGUE"]["Assassination"]["T8"][10] = { ["slot_name"] = "Feet", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60763 }, [2] = { ["type"] = "item", ["id"] = 39999 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 39999 } }, [1] = 45564, [2] = 39701, [3] = 45232, [4] = 44297, [5] = 45162, [6] = 45302 }
+GA_BiSLists["ROGUE"]["Assassination"]["T8"][11] = { ["slot_name"] = "Finger", ["enhs"] = { [1] = { ["type"] = "none", ["id"] = 0 }, [2] = { ["type"] = "item", ["id"] = 39999 } }, [1] = 46048, [2] = 45608, [3] = 45157, [4] = 45534, [5] = 45525, [6] = 45540 }
+GA_BiSLists["ROGUE"]["Assassination"]["T8"][12] = { ["slot_name"] = "Trinket", ["enhs"] = { }, [1] = 45609, [2] = 46038, [3] = 45286, [4] = 45522, [5] = 45263, [6] = 45931 }
+GA_BiSLists["ROGUE"]["Assassination"]["T8"][13] = { ["slot_name"] = "Weapon", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 59621 }, [2] = { ["type"] = "item", ["id"] = 39999 } }, [1] = 45484, [2] = 45930, [3] = 46024, [4] = 45246, [5] = 39714, [6] = 37856 }
+GA_BiSLists["ROGUE"]["Assassination"]["T8"][14] = { ["slot_name"] = "Off hand", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 59621 }, [2] = { ["type"] = "item", ["id"] = 39999 } }, [1] = 45484, [2] = 45930, [3] = 45607, [4] = 45448, [5] = 45246, [6] = 45605 }
+GA_BiSLists["ROGUE"]["Assassination"]["T8"][15] = { ["slot_name"] = "Ranged", ["enhs"] = { }, [1] = 45570, [2] = 45870, [3] = 45296, [4] = 45086, [5] = 40190, [6] = 46018 }
+GA_BiSLists["ROGUE"]["Combat"]["T7"] = {};
+GA_BiSLists["ROGUE"]["Combat"]["T7"][1] = { ["slot_name"] = "Head", ["enhs"] = { [1] = { ["type"] = "item", ["id"] = 44879 }, [2] = { ["type"] = "item", ["id"] = 41398 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 42702 } }, [1] = 40499, [2] = 39399, [3] = 40329, [4] = 39561, [5] = 42550, [6] = 34244 }
+GA_BiSLists["ROGUE"]["Combat"]["T7"][2] = { ["slot_name"] = "Neck", ["enhs"] = { [1] = { ["type"] = "none", ["id"] = 0 }, [2] = { ["type"] = "item", ["id"] = 39999 } }, [1] = 44664, [2] = 40065, [3] = 39146, [4] = 40369, [5] = 39421, [6] = 44659 }
+GA_BiSLists["ROGUE"]["Combat"]["T7"][3] = { ["slot_name"] = "Shoulder", ["enhs"] = { [1] = { ["type"] = "item", ["id"] = 44871 }, [2] = { ["type"] = "item", ["id"] = 39999 } }, [1] = 40502, [2] = 40305, [3] = 39237, [4] = 40437, [5] = 39565, [6] = 37139 }
+GA_BiSLists["ROGUE"]["Combat"]["T7"][4] = { ["slot_name"] = "Back", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60663 } }, [1] = 40403, [2] = 39404, [3] = 40250, [4] = 40721, [5] = 39297, [6] = 38614 }
+GA_BiSLists["ROGUE"]["Combat"]["T7"][5] = { ["slot_name"] = "Chest", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60692 }, [2] = { ["type"] = "item", ["id"] = 39999 } }, [1] = 40539, [2] = 40277, [3] = 43990, [4] = 40495, [5] = 40319, [6] = 39386 }
+GA_BiSLists["ROGUE"]["Combat"]["T7"][6] = { ["slot_name"] = "Wrist", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 44575 }, [2] = { ["type"] = "item", ["id"] = 39999 } }, [1] = 39765, [2] = 40186, [3] = 40738, [4] = 39247, [5] = 44203, [6] = 37366 }
+GA_BiSLists["ROGUE"]["Combat"]["T7"][7] = { ["slot_name"] = "Hands", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60668 } }, [1] = 40541, [2] = 39727, [3] = 40496, [4] = 40362, [5] = 39560, [6] = 37409 }
+GA_BiSLists["ROGUE"]["Combat"]["T7"][8] = { ["slot_name"] = "Waist", ["enhs"] = { }, [1] = 40205, [2] = 45709, [3] = 45555, [4] = 45547, [5] = 45829, [6] = 46095 }
+GA_BiSLists["ROGUE"]["Combat"]["T7"][9] = { ["slot_name"] = "Legs", ["enhs"] = { [1] = { ["type"] = "item", ["id"] = 38374 }, [2] = { ["type"] = "item", ["id"] = 39999 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 39999 } }, [1] = 44011, [2] = 40500, [3] = 39761, [4] = 39564, [5] = 40333, [6] = 39224 }
+GA_BiSLists["ROGUE"]["Combat"]["T7"][10] = { ["slot_name"] = "Feet", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60763 } }, [1] = 39701, [2] = 40243, [3] = 44297, [4] = 40748, [5] = 39196, [6] = 37666 }
+GA_BiSLists["ROGUE"]["Combat"]["T7"][11] = { ["slot_name"] = "Finger", ["enhs"] = { }, [1] = 40474, [2] = 40074, [3] = 40717, [4] = 43993, [5] = 39277, [6] = 40586 }
+GA_BiSLists["ROGUE"]["Combat"]["T7"][12] = { ["slot_name"] = "Trinket", ["enhs"] = { }, [1] = 44253, [2] = 40684, [3] = 40256, [4] = 40431, [5] = 37166, [6] = 34427 }
+GA_BiSLists["ROGUE"]["Combat"]["T7"][13] = { ["slot_name"] = "Weapon", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 59621 } }, [1] = 40383, [2] = 39416, [3] = 40407, [4] = 42285, [5] = 39291, [6] = 40429 }
+GA_BiSLists["ROGUE"]["Combat"]["T7"][14] = { ["slot_name"] = "Off hand", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 59621 } }, [1] = 39714, [2] = 37856, [3] = 42248, [4] = 40368, [5] = 40491, [6] = 39427 }
+GA_BiSLists["ROGUE"]["Combat"]["T7"][15] = { ["slot_name"] = "Ranged", ["enhs"] = { }, [1] = 40385, [2] = 40190, [3] = 40265, [4] = 39296, [5] = 43612, [6] = 40346 }
+GA_BiSLists["ROGUE"]["Combat"]["T8"] = {};
+GA_BiSLists["ROGUE"]["Combat"]["T8"][1] = { ["slot_name"] = "Head", ["enhs"] = { [1] = { ["type"] = "item", ["id"] = 44879 }, [2] = { ["type"] = "item", ["id"] = 41398 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 40003 } }, [1] = 45993, [2] = 45523, [3] = 45893, [4] = 46125, [5] = 45398, [6] = 40499 }
+GA_BiSLists["ROGUE"]["Combat"]["T8"][2] = { ["slot_name"] = "Neck", ["enhs"] = { [1] = { ["type"] = "none", ["id"] = 0 }, [2] = { ["type"] = "item", ["id"] = 39999 } }, [1] = 45517, [2] = 45945, [3] = 45480, [4] = 45459, [5] = 45820, [6] = 40065 }
+GA_BiSLists["ROGUE"]["Combat"]["T8"][3] = { ["slot_name"] = "Shoulder", ["enhs"] = { [1] = { ["type"] = "item", ["id"] = 44871 }, [2] = { ["type"] = "item", ["id"] = 39999 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 39999 } }, [1] = 45245, [2] = 46127, [3] = 45677, [4] = 45400, [5] = 45265, [6] = 40502 }
+GA_BiSLists["ROGUE"]["Combat"]["T8"][4] = { ["slot_name"] = "Back", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60663 }, [2] = { ["type"] = "item", ["id"] = 40052 } }, [1] = 45461, [2] = 45224, [3] = 46032, [4] = 45704, [5] = 45873, [6] = 40403 }
+GA_BiSLists["ROGUE"]["Combat"]["T8"][5] = { ["slot_name"] = "Chest", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60692 }, [2] = { ["type"] = "item", ["id"] = 40052 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 42702 }, [5] = { ["type"] = "none", ["id"] = 0 }, [6] = { ["type"] = "item", ["id"] = 39999 } }, [1] = 45473, [2] = 46123, [3] = 45396, [4] = 45940, [5] = 45453, [6] = 40539 }
+GA_BiSLists["ROGUE"]["Combat"]["T8"][6] = { ["slot_name"] = "Wrist", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 44575 }, [2] = { ["type"] = "item", ["id"] = 40052 } }, [1] = 45869, [2] = 45611, [3] = 40186, [4] = 45108, [5] = 39765, [6] = 40738 }
+GA_BiSLists["ROGUE"]["Combat"]["T8"][7] = { ["slot_name"] = "Hands", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60668 }, [2] = { ["type"] = "item", ["id"] = 39999 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 40052 } }, [1] = 46043, [2] = 46124, [3] = 45325, [4] = 40541, [5] = 45397, [6] = 39727 }
+GA_BiSLists["ROGUE"]["Combat"]["T8"][8] = { ["slot_name"] = "Waist", ["enhs"] = { [1] = { ["type"] = "none", ["id"] = 0 }, [2] = { ["type"] = "item", ["id"] = 39999 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 39999 }, [5] = { ["type"] = "none", ["id"] = 0 }, [6] = { ["type"] = "item", ["id"] = 39999 } }, [1] = 46095, [2] = 45829, [3] = 45547, [4] = 45555, [5] = 45709, [6] = 40260 }
+GA_BiSLists["ROGUE"]["Combat"]["T8"][9] = { ["slot_name"] = "Legs", ["enhs"] = { [1] = { ["type"] = "item", ["id"] = 38374 }, [2] = { ["type"] = "item", ["id"] = 39999 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 39999 }, [5] = { ["type"] = "none", ["id"] = 0 }, [6] = { ["type"] = "item", ["id"] = 39999 } }, [1] = 45536, [2] = 45846, [3] = 44011, [4] = 45141, [5] = 46126, [6] = 45399 }
+GA_BiSLists["ROGUE"]["Combat"]["T8"][10] = { ["slot_name"] = "Feet", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 60763 }, [2] = { ["type"] = "item", ["id"] = 39999 }, [3] = { ["type"] = "none", ["id"] = 0 }, [4] = { ["type"] = "item", ["id"] = 39999 } }, [1] = 45564, [2] = 45232, [3] = 39701, [4] = 45162, [5] = 45302, [6] = 40243 }
+GA_BiSLists["ROGUE"]["Combat"]["T8"][11] = { ["slot_name"] = "Finger", ["enhs"] = { [1] = { ["type"] = "none", ["id"] = 0 }, [2] = { ["type"] = "item", ["id"] = 39999 } }, [1] = 46048, [2] = 45608, [3] = 45157, [4] = 45456, [5] = 45525, [6] = 46322 }
+GA_BiSLists["ROGUE"]["Combat"]["T8"][12] = { ["slot_name"] = "Trinket", ["enhs"] = { }, [1] = 45609, [2] = 46038, [3] = 45522, [4] = 45286, [5] = 45931, [6] = 40256 }
+GA_BiSLists["ROGUE"]["Combat"]["T8"][13] = { ["slot_name"] = "Weapon", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 59621 }, [2] = { ["type"] = "item", ["id"] = 40052 } }, [1] = 45132, [2] = 45449, [3] = 45947, [4] = 45266, [5] = 45489, [6] = 46097 }
+GA_BiSLists["ROGUE"]["Combat"]["T8"][14] = { ["slot_name"] = "Off hand", ["enhs"] = { [1] = { ["type"] = "spell", ["id"] = 59621 }, [2] = { ["type"] = "item", ["id"] = 39999 } }, [1] = 45484, [2] = 45930, [3] = 46036, [4] = 45331, [5] = 45494, [6] = 45142 }
+GA_BiSLists["ROGUE"]["Combat"]["T8"][15] = { ["slot_name"] = "Ranged", ["enhs"] = { [1] = { ["type"] = "none", ["id"] = 0 }, [2] = { ["type"] = "item", ["id"] = 39999 } }, [1] = 45296, [2] = 45570, [3] = 45870, [4] = 45086, [5] = 40190, [6] = 45327 }
+end
+
+

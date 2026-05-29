@@ -1,0 +1,95 @@
+## Interface: 30300
+## Title: !|cff00ffffAddon Naer|r |cff33ff33[GearAnalyzer]|r
+## Notes: Gear analysis addon for WoW 3.3.5
+## Author: Zorrorojo/miabuelita (guild Sedentarios)
+## Version: v3.5
+## SavedVariables: GearAnalyzerDB
+## OptionalDeps: Ace3
+## X-Part-Of: !|cff00ffffAddon Naer|r
+
+
+# --- Libraries ---
+Libs\LibStub\LibStub.lua
+Libs\LibParse\LibParse.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
+Libs\AceAddon-3.0\AceAddon-3.0.xml
+Libs\AceEvent-3.0\AceEvent-3.0.xml
+Libs\AceDB-3.0\AceDB-3.0.xml 
+Libs\AceDBOptions-3.0\AceDBOptions-3.0.xml
+Libs\AceConsole-3.0\AceConsole-3.0.xml
+Libs\AceGUI-3.0\AceGUI-3.0.xml
+Libs\AceConfig-3.0\AceConfig-3.0.xml
+Libs\AceTimer-3.0\AceTimer-3.0.xml
+Libs\AceLocale-3.0\AceLocale-3.0.xml
+Libs\AceHook-3.0\AceHook-3.0.xml
+Libs\LibDataBroker\LibDataBroker-1.1.lua
+Libs\LibDBIcon-1.0\LibDBIcon-1.0.lua
+Libs\LibPeriodicTable-3.1\LibPeriodicTable-3.1.lua
+Libs\LibBabble-Boss-3.0\lib.xml
+Libs\LibBabble-Zone-3.0\lib.xml
+GearAnalyzer_RaidLoot.lua
+
+# --- Locales ---
+Locales\enUS.lua
+Locales\esES.lua
+
+# --- Internal DBs ---
+GearAnalyzer_DB_Classes.lua
+GearAnalyzer_DB_FactionTrans.lua
+GearAnalyzer_DB_LootSources.lua
+
+# --- Core Logic ---
+GearAnalyzer_Main.lua
+GearAnalyzer_Guide.lua
+GearAnalyzer_Database.lua
+GearAnalyzer_Utils.lua
+HitCalculator.lua
+GearAnalyzer_Process.lua
+GearAnalyzer_Tooltips.lua
+GearAnalyzer_Locale.lua
+GearAnalyzer_DB_Enchants_Master.lua
+GearAnalyzer_DB_Professions.lua
+GearAnalyzer_DB_Patterns.lua
+GearAnalyzer_Integration.lua
+GearAnalyzer_Scan.lua
+Modules\GearAnalyzer_Inventory.lua
+GearAnalyzer_Analysis_Gems.lua
+GearAnalyzer_Analysis.lua
+GearAnalyzer_ServerSync.lua
+GearAnalyzer_LocalDatabase.lua
+GearAnalyzer_DB_Hook.lua
+
+# --- Class Data ---
+Data\DeathKnight.lua
+Data\Druid.lua
+Data\Hunter.lua
+Data\Mage.lua
+Data\Paladin.lua
+Data\Priest.lua
+Data\Rogue.lua
+Data\Shaman.lua
+Data\Warlock.lua
+Data\Warrior.lua
+
+# --- UI Framework ---
+GearAnalyzer_UI_Core.lua
+GearAnalyzer_Tab_Equipment.lua
+GearAnalyzer_Tab_Gems.lua
+GearAnalyzer_Tab_Enchants.lua
+GearAnalyzer_Tab_Glyphs.lua
+GearAnalyzer_Tab_Talents.lua
+GearAnalyzer_Tab_BiSTops.lua
+GearAnalyzer_Tab_Caps.lua
+GearAnalyzer_Tab_ExportarIA.lua
+GearAnalyzer_Tab_Info.lua
+GearAnalyzer_Tab_Config.lua
+
+# --- Guide Window Tabs ---
+GearAnalyzer_Guide_Tab_General.lua
+GearAnalyzer_Guide_Tab_Gems.lua
+GearAnalyzer_Guide_Tab_Enchants.lua
+GearAnalyzer_Guide_Tab_Glyphs.lua
+GearAnalyzer_Guide_Tab_Talents.lua
+GearAnalyzer_Guide_Tab_Caps.lua
+GearAnalyzer_Guide_Tab_BiSTops.lua
+GearAnalyzer_Minimap.lua
